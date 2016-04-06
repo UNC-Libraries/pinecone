@@ -1,0 +1,3 @@
+*.lock
+*.db
+.DS_STORE
