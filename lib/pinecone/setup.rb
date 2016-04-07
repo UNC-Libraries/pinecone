@@ -9,9 +9,7 @@ rows = db.execute <<-SQL
     lastValidated INTEGER,
     replicated BOOLEAN,
     complete BOOLEAN,
-    missingCount NUMERIC,
+    completeProgress NUMERIC,
     valid BOOLEAN
   );
 SQL
-
-db.execute("INSERT INTO bags (path, replicated) VALUES (?, ?)", ["/path/to/me/", "true"])

@@ -1,0 +1,10 @@
+<h1>Bag failed to validate</h1>
+<h2>The following bag is invalid:</h2>
+<b>{{bag_path}}</b>
+
+<h2>Due to the following issues:</h2>
+<ul>
+  {{#errors}}
+    <li>{{.}}</li>
+  {{/errors}}
+</ul>
