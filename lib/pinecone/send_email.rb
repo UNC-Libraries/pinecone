@@ -5,8 +5,9 @@ bag = Pinecone::PreservationBag.new("/Users/bbpennel/Desktop/pinecone/bag_charac
 
 email = Pinecone::EmailHandler.new
 email.from_address = "cdr-tps@unc.edu"
-email.send_invalid_bag_report(bag, "bbpennel@email.unc.edu")
-#
+email.to_addresses = ["bbpennel@email.unc.edu"]
+email.send_invalid_bag_report(bag, ["bbpennel@email.unc.edu"])
+
 # mail = Mail.new do
 #   from    'bbpennel@email.unc.edu'
 #   to      'bbpennel@email.unc.edu'
@@ -20,8 +21,8 @@ email.send_invalid_bag_report(bag, "bbpennel@email.unc.edu")
 # report.errors = ["One", "Two"]
 # report.bag_path = "kaboom"
 # puts report.render(File.read("data/templates/invalid_bag.html.mustache"))
-
-#mail.deliver!
+#
+# mail.deliver!
 
 # email = Pinecone::EmailHandler.invalid_bag_report
 # email.deliver

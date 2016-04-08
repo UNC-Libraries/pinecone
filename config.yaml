@@ -1,0 +1,3 @@
+database_uri: "./pinecone.db"
+preservation_locations:
+  - test-data/simple-loc

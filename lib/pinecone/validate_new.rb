@@ -1,6 +1,8 @@
 require 'sqlite3'
 require 'bagit'
 require_relative 'preservation_bag'
+require_relative 'email_handler'
+require_relative 'preservation_location_manager'
 
 db = SQLite3::Database.new "pinecone.db"
 
@@ -12,36 +14,27 @@ db.execute( "select path from bags where valid is not null" ) do |row|
   known_validated.push row[0]
 end
 
-known_unvalidated = Array.new
-# Retrieve list of known bags that have not been validated
-db.execute( "select path from bags where valid is null" ) do |row|
-  known_unvalidated.push row[0]
-end
+# Setup email handler for sending results
+mailer = Pinecone::EmailHandler.new
+mailer.from_address = "bbpennel@email.unc.edu"
+mailer.to_addresses = ["bbpennel@email.unc.edu"]
 
-#puts known_unvalidated
-# Get a list of directories in the watch folders
-bag_paths = Array.new
-watch_paths.each do |watch_path|
-  Dir.entries(watch_path).each do |entry|
-    abs_path = File.join(watch_path, entry)
-    if !(File.directory? abs_path) || entry == "." || entry == ".."
-      next
-    end
-    
-    bag_paths.push abs_path
-  end
-end
+# Get a list of potential bag directories from all preservation locations
+loc_manager = Pinecone::PreservationLocationManager.new(watch_paths)
+bag_paths = loc_manager.get_bag_paths
 
 unvalidated_bags = bag_paths - known_validated
 unvalidated_bags.each do |bag_path|
   bag = Pinecone::PreservationBag.new(bag_path, db)
   
-  # Create entry for the new bag
-  if !known_unvalidated.include? bag_path
-    db.execute("insert into bags (path) values (?)", [bag_path])
-  end
-  
   puts "Checking on unvalidated bag #{bag_path}"
   
-  result = bag.validate_if_complete
+  if bag.validate_if_complete
+    puts "Bag #{bag_path} was valid"
+  else
+    puts "Bag #{bag_path} was invalid, sending report"
+    pres_loc = loc_manager.get_location_by_path(bag_path)
+    puts pres_loc.get_contact_emails
+    # mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
+  end
 end

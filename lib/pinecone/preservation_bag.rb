@@ -5,43 +5,45 @@ module Pinecone
     attr_accessor :bag, :db, :bag_path
     
     def initialize(bag_path, db)
+      if !(File.exist? bag_path)
+        raise "Bag path #{bag_path} did not exist, cannot create PreservationBag"
+      end
       @bag_path = bag_path
       @bag = BagIt::Bag.new bag_path
       @db = db
+      
+      @db.execute("insert or ignore into bags (path) values (?) ", [bag_path])
     end
     
     def bag_name
-      return @bag_path.partition("/").last
+      return @bag_path.rpartition("/").last
     end
     
     # Validates the bag, returning true if valid, or an array of errors if not
     def report_validity(success)
       @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = '#{success}' where path = '#{bag_path}'")
   
-      if success
-        puts "Bag #{bag_path} was valid"
-        return true
-      end
-      
-      return @bag.errors.on(:consistency)
+      return success
     end
     
-    def check_consistency
+    # Checks that the bag is consistent (checksums match)
+    def consistent?
       return report_validity(@bag.consistent?)
     end
     
-    def validate
+    # Checks that the bag is both complete and consistent.
+    def valid?
       return report_validity(@bag.valid?)
     end
     
     # Verifies that a bag is complete, if so then performs consistency checks.
-    # If the bag was incomplete, attempts to determine if the bag is still being added instead of failing
+    # If the bag was incomplete, attempts to determine if the bag is still being added to instead of failing
     def validate_if_complete
       if @bag.complete?
         # Bag was complete, proceed with the more intensive parts 
         @db.execute("update bags set complete = 'true' where path = '#{@bag_path}'")
     
-        return check_consistency
+        return consistent?
       end
       
       # Check that the bag has a manifest before checking completeness further
@@ -60,11 +62,11 @@ module Pinecone
         @db.execute("update bags set valid = 'false' where path = '#{@bag_path}'")
   
         # Send out a warning that the bag is invalid
-        return errors
+        return false
       end
   
       # If the @bag was simply missing files, it may not have finished transfering
-      return completeness_progress(errors.length)? true : errors
+      return completeness_progress(errors.length)
     end
     
     # Determines and tracks if the bag appears to be in progress of being created
@@ -74,7 +76,7 @@ module Pinecone
 
       # No movement, assume that the bag is actually incomplete
       if row[0] != nil && count == row[0]
-        @db.execute("update bags set valid = 'false' where path = '#{@bag_path}'")
+        @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = 'false' where path = '#{@bag_path}'")
         return false
       end
       
@@ -105,7 +107,7 @@ module Pinecone
         result = result + consistency
       end
       
-      return ["blah"]
+      return result
     end
     
     # Replicates the bag to a second location
