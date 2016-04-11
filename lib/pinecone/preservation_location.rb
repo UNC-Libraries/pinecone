@@ -3,13 +3,16 @@ require 'yaml'
 module Pinecone
   class PreservationLocation
     attr_accessor :path
-    attr_reader :info
+    attr_reader :info, :loc_key
     
     def initialize(path)
       @path = path
       info_file = File.join(path, "tps-info.yaml")
       if File.exist? info_file
         @info = YAML.load_file(info_file)
+        @loc_key = @info["name"]
+      else
+        @loc_key = @path.rpartition("/").last
       end
     end
     

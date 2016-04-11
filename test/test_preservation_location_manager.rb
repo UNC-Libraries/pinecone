@@ -10,6 +10,12 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     assert_true(manager.pres_locs.key? "test-data/simple-loc")
   end
   
+  def test_duplicate_location_keys
+    assert_raise do
+      Pinecone::PreservationLocationManager.new ["test-data/simple-loc", "test-data/simple-loc"]
+    end
+  end
+  
   def test_get_location_by_path
     manager = Pinecone::PreservationLocationManager.new ["test-data/simple-loc", "test-data/invalid-loc"]
     

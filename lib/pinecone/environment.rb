@@ -14,6 +14,7 @@ module Pinecone
       
       self.set_db
       self.set_logger
+      self.set_preservation_locations(@@config["preservation_locations"])
     end
     
     def Environment.get_db
@@ -32,9 +33,9 @@ module Pinecone
     def Environment.set_logger()
       log_config = @@config["activity_log"]
       if log_config["filename"] == nil
-        @@logger = Logger::Logger.new STDOUT
+        @@logger = Logger.new STDOUT
       else
-        @@logger = Logger::Logger.new(File.join(@@data_dir, log_config["filename"]), log_config["max_logs"], log_config["max_size"])
+        @@logger = Logger.new(File.join(@@data_dir, log_config["filename"]), log_config["max_logs"], log_config["max_size"])
       end
     
       @@logger.sev_threshold = ActiveSupport::Inflector.constantize log_config["level"]

@@ -41,4 +41,8 @@ module Pinecone
       end
     end
   end
+  
+  def Pinecone.replicate_bag(bag)
+    # replica_path = 
+  end
 end
