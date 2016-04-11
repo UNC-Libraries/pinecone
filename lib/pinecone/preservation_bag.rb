@@ -1,16 +1,19 @@
 require 'bagit'
+require_relative 'environment'
 
 module Pinecone
   class PreservationBag
-    attr_accessor :bag, :db, :bag_path
+    attr_accessor :bag, :bag_path
+    :db
+    :env
     
-    def initialize(bag_path, db)
+    def initialize(bag_path)
       if !(File.exist? bag_path)
         raise "Bag path #{bag_path} did not exist, cannot create PreservationBag"
       end
       @bag_path = bag_path
       @bag = BagIt::Bag.new bag_path
-      @db = db
+      @db = Pinecone::Environment.get_db
       
       @db.execute("insert or ignore into bags (path) values (?) ", [bag_path])
     end
@@ -81,8 +84,8 @@ module Pinecone
       end
       
       # Things are still moving, give it more time
-      db.execute("update bags set completeProgress = '#{count}' where path = '#{@bag_path}'")
-      puts "Bag #{bag_path} was not complete, carry on: #{bag.errors.on(:completeness).class}"
+      @db.execute("update bags set completeProgress = '#{count}' where path = '#{@bag_path}'")
+      Pinecone::Environment.logger.info "Bag #{bag_path} was not complete, carry on: #{bag.errors.on(:completeness).class}"
       return true
     end
     

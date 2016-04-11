@@ -5,7 +5,7 @@ require_relative 'reports/invalid_bag.rb'
 module Pinecone
   class EmailHandler
     attr_accessor :from_address
-    attr_accessor :to_addresses
+    attr_accessor :email_on_error
     :invalid_bag_template
     
     def initialize
@@ -17,7 +17,7 @@ module Pinecone
       report.errors = bag.get_all_errors
       report.bag_path = bag.bag_path
       
-      to_address = build_to_address(to_addresses)
+      to_address = build_error_to_address(to_addresses)
       
       mail = Mail.new do
         subject "Invalid bag #{bag.bag_name}"
@@ -30,8 +30,8 @@ module Pinecone
       mail.deliver!
     end
     
-    def build_to_address(local_tos)
-      return @to_addresses + local_tos
+    def build_error_to_address(local_tos)
+      return @email_on_error + local_tos
     end
   end
 end

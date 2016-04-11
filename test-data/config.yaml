@@ -1,7 +1,8 @@
 preservation_locations:
   - test-data/simple-loc
+  - test-data/invalid-loc
 admin_email:
-  - bbpennel@email.unc.edu
+  - test@example.com
 from_email: cdr-tps@unc.edu
 activity_log:
   filename: ~

@@ -1,10 +1,10 @@
 require 'sqlite3'
 
 module Pinecone
-  def Pinecone.setup_database(base_dir=".")
-    db_file = File.join(base_dir, "pinecone.db")
-    puts "Creating pinecone database at path #{db_file}"
-    db = SQLite3::Database.new File.join(base_dir, "pinecone.db")
+  def Pinecone.setup_database
+    Pinecone::Environment.logger.unknown "Initializing pinecone database in #{File.absolute_path Pinecone::Environment.get_data_dir}"
+    
+    db = Pinecone::Environment.get_db
 
     db.execute( "drop table if exists bags" )
     rows = db.execute <<-SQL
