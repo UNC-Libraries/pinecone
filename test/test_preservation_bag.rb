@@ -1,4 +1,3 @@
-require 'sqlite3'
 require "test/unit"
 require 'fileutils'
 require 'tmpdir'
@@ -19,6 +18,7 @@ class TestPreservationBag < Test::Unit::TestCase
     Pinecone::setup_database
     
     @db = Pinecone::Environment.get_db
+    puts @tmp_test_dir
   end
   
   def teardown
@@ -86,7 +86,7 @@ class TestPreservationBag < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new(bag_path)
     
     # Bag does not report that it fail to validate, but also did not succeed.  Limbo
-    assert_true(bag.validate_if_complete)
+    assert_equal("inprogress", bag.validate_if_complete)
     row = @db.get_first_row("select lastValidated, valid from bags")
     assert_nil(row[0])
     assert_nil(row[1])
@@ -114,7 +114,7 @@ class TestPreservationBag < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new(bag_path)
     
     # Bag does not report that it fail to validate, but also did not succeed.  Limbo
-    assert_true(bag.validate_if_complete)
+    assert_equal("inprogress", bag.validate_if_complete)
     row = @db.get_first_row("select lastValidated, valid from bags")
     assert_nil(row[0])
     assert_nil(row[1])
@@ -123,7 +123,7 @@ class TestPreservationBag < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new(bag_path)
     
     # Really invalid after second check
-    assert_false(bag.validate_if_complete)
+    assert_equal(Array, bag.validate_if_complete.class)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
     assert_equal("false", row[1])

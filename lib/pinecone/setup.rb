@@ -12,6 +12,7 @@ module Pinecone
         path TEXT PRIMARY KEY,
         lastValidated INTEGER,
         replicated BOOLEAN,
+        replicaPath text,
         complete BOOLEAN,
         completeProgress NUMERIC,
         valid BOOLEAN

@@ -11,11 +11,11 @@ module Pinecone
       if !(File.exist? bag_path)
         raise "Bag path #{bag_path} did not exist, cannot create PreservationBag"
       end
-      @bag_path = bag_path
-      @bag = BagIt::Bag.new bag_path
+      @bag_path = File.absolute_path bag_path
+      @bag = BagIt::Bag.new @bag_path
       @db = Pinecone::Environment.get_db
       
-      @db.execute("insert or ignore into bags (path) values (?) ", [bag_path])
+      @db.execute("insert or ignore into bags (path) values (?) ", [@bag_path])
     end
     
     def bag_name
@@ -24,7 +24,7 @@ module Pinecone
     
     # Validates the bag, returning true if valid, or an array of errors if not
     def report_validity(success)
-      @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = '#{success}' where path = '#{bag_path}'")
+      @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = '#{success}' where path = '#{@bag_path}'")
   
       return success
     end
@@ -37,6 +37,11 @@ module Pinecone
     # Checks that the bag is both complete and consistent.
     def valid?
       return report_validity(@bag.valid?)
+    end
+    
+    # Checks that the size of the data and number of files matches expected values
+    def valid_oxum?
+      return @bag.valid_oxum?
     end
     
     # Verifies that a bag is complete, if so then performs consistency checks.
@@ -52,7 +57,7 @@ module Pinecone
       # Check that the bag has a manifest before checking completeness further
       if @bag.manifest_files.length == 0
         fileCount = Dir[File.join(bag_path, "**", "*")].length
-        return completeness_progress(fileCount)? true : errors
+        return completeness_progress(fileCount)? "inprogress" : errors
       end
   
       # Errors come back as a string if there is only one of them, normalize that
@@ -63,13 +68,10 @@ module Pinecone
           errors.any? { |error| error.end_with? "is a manifested tag but not present" }
     
         @db.execute("update bags set valid = 'false' where path = '#{@bag_path}'")
-  
-        # Send out a warning that the bag is invalid
         return false
       end
-  
-      # If the @bag was simply missing files, it may not have finished transfering
-      return completeness_progress(errors.length)
+      
+      return completeness_progress(errors.length)? "inprogress" : errors
     end
     
     # Determines and tracks if the bag appears to be in progress of being created
@@ -85,7 +87,6 @@ module Pinecone
       
       # Things are still moving, give it more time
       @db.execute("update bags set completeProgress = '#{count}' where path = '#{@bag_path}'")
-      Pinecone::Environment.logger.info "Bag #{bag_path} was not complete, carry on: #{bag.errors.on(:completeness).class}"
       return true
     end
     
@@ -111,11 +112,6 @@ module Pinecone
       end
       
       return result
-    end
-    
-    # Replicates the bag to a second location
-    def replicate
-      
     end
   end
 end

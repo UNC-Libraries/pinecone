@@ -2,12 +2,15 @@ require "test/unit"
 require_relative '../lib/pinecone/preservation_location_manager'
 
 class TestPreservationLocationManager < Test::Unit::TestCase
+  @@simple_abs = File.absolute_path "test-data/simple-loc"
+  @@invalid_abs = File.absolute_path "test-data/invalid-loc"
+  
   def test_find_locations
     manager = Pinecone::PreservationLocationManager.new ["test-data/simple-loc", "test-data/invalid-loc"]
     
     assert_equal(2, manager.pres_locs.length)
-    assert_true(manager.pres_locs.key? "test-data/invalid-loc")
-    assert_true(manager.pres_locs.key? "test-data/simple-loc")
+    assert_true(manager.pres_locs.key? @@invalid_abs)
+    assert_true(manager.pres_locs.key? @@simple_abs)
   end
   
   def test_duplicate_location_keys
@@ -20,20 +23,20 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     manager = Pinecone::PreservationLocationManager.new ["test-data/simple-loc", "test-data/invalid-loc"]
     
     # Verify that it can find the location for a real bag
-    loc = manager.get_location_by_path "test-data/invalid-loc/incomplete_bag"
+    loc = manager.get_location_by_path File.join(@@invalid_abs, "incomplete_bag")
     assert_not_nil(loc)
-    assert_equal("test-data/invalid-loc", loc.path)
+    assert_equal(@@invalid_abs, loc.path)
     
     # Verify that a location comes back even if the bag doesn't exist
-    loc = manager.get_location_by_path "test-data/invalid-loc/non-existent"
+    loc = manager.get_location_by_path File.join(@@invalid_abs, "non-existent")
     assert_not_nil(loc)
-    assert_equal("test-data/invalid-loc", loc.path)
+    assert_equal(@@invalid_abs, loc.path)
   end
   
   def test_get_location_by_path_invalid_location
     manager = Pinecone::PreservationLocationManager.new ["test-data/simple-loc"]
     
-    loc = manager.get_location_by_path "test-data/non-existent-location/basic_bag"
+    loc = manager.get_location_by_path File.absolute_path "test-data/non-existent-location/basic_bag"
     assert_nil(loc)
   end
     

@@ -8,4 +8,4 @@ activity_log:
   level: "Logger::DEBUG"
   max_logs: ~
   max_size: ~
-
+replica_dir: ~

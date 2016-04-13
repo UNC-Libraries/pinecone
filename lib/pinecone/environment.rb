@@ -1,5 +1,6 @@
 require 'yaml'
 require 'logger'
+require 'sqlite3'
 require 'active_support/inflector'
 
 module Pinecone
@@ -7,6 +8,7 @@ module Pinecone
     @@db = nil
     @@pres_locs = nil
     @@logger = nil
+    @@replica_dir = nil
     
     def Environment.setup_env(data_dir)
       @@data_dir = data_dir
@@ -15,6 +17,7 @@ module Pinecone
       self.set_db
       self.set_logger
       self.set_preservation_locations(@@config["preservation_locations"])
+      self.set_replica_dir(@@config["replica_dir"])
     end
     
     def Environment.get_db
@@ -59,6 +62,14 @@ module Pinecone
     
     def Environment.get_data_dir
       return @@data_dir
+    end
+    
+    def Environment.get_replica_dir
+      return @@replica_dir
+    end
+    
+    def Environment.set_replica_dir(replica_dir)
+      @@replica_dir = replica_dir
     end
   end
 end

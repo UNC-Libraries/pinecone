@@ -10,15 +10,15 @@ module Pinecone
     def initialize(paths)
       @pres_locs = Hash.new
       
-      puts paths
       loc_keys = Set.new []
       paths.each do |path|
-        loc = Pinecone::PreservationLocation.new(path)
-        @pres_locs[path] = loc
+        abs_path = File.absolute_path path
+        loc = Pinecone::PreservationLocation.new(abs_path)
+        @pres_locs[abs_path] = loc
         
         # End program if there are multiple locations with the same key
         if loc_keys.include? loc.loc_key
-          raise "Duplicate preservation location key #{loc.loc_key} for path #{path}"
+          raise "Duplicate preservation location key #{loc.loc_key} for path #{abs_path}"
         end
         loc_keys.add loc.loc_key
       end
