@@ -1,23 +1,15 @@
 require 'yaml'
-require 'pathname'
 require_relative 'environment'
 
 module Pinecone
   class PreservationLocation
     attr_accessor :path
     attr_reader :info, :loc_key
-    :loc_pathname
     
-    def initialize(path)
-      @path = path
-      @loc_pathname = Pathname.new path
-      info_file = File.join(path, "tps-info.yaml")
-      if File.exist? info_file
-        @info = YAML.load_file(info_file)
-        @loc_key = @info["name"]
-      else
-        @loc_key = @path.rpartition("/").last
-      end
+    def initialize(name, info)
+      @path = File.absolute_path info["path"]
+      @loc_key = name
+      @info = info
     end
     
     # Returns the list of email addresses to contact for this location

@@ -1,6 +1,7 @@
 require 'yaml'
 require 'logger'
 require 'sqlite3'
+require 'pathname'
 require 'active_support/inflector'
 
 module Pinecone
@@ -58,6 +59,17 @@ module Pinecone
     
     def Environment.set_preservation_locations(pres_locs)
       @@pres_locs = pres_locs
+      
+      if @@pres_locs != nil
+        # Resolve preservation locations relative to the data directory
+        @@pres_locs.each do |name, info|
+          if Pathname.new(info["path"]).relative?
+            abs_path = File.join(@@data_dir, info["path"])
+            @@logger.debug("Resolving relative preservation location #{info["path"]} to #{abs_path}")
+            info["path"] = abs_path
+          end
+        end
+      end
     end
     
     def Environment.get_data_dir

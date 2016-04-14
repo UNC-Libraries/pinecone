@@ -98,6 +98,8 @@ module Pinecone
     # Replicates the given bag to the configured replica destination.  Replicas are placed into subdirectories
     # based on the name attribute or directory name of the preservation location they came from
     def replicate_bag(bag)
+      puts bag.bag_path
+      puts @loc_manager.pres_locs
       pres_loc = @loc_manager.get_location_by_path(bag.bag_path)
       
       # Build the path for replicas from this preservation location

@@ -25,17 +25,13 @@ config.yaml
 Primary configuration for the application.  Includes:
 * admin_email - A list of administrator email addresses who should be contacted for all errors
 * from_email - Sender address for error report emails
-* preservation_locations - List of directories containing bags upon which preservation activities will be performed.
+* preservation_locations - Map of directories containing bags upon which preservation activities will be performed.  Each location is configured with the following:
+  * name (key) - Identifier for the location, which must be unique.  It will be used as the name of the base directory containing bags from this location during replication.
+  * path - File path for the location.  If it is relative, it will be evaluated relative to PINECONE_DATA.
+  * contacts - A list of email addresses for people that should be contacted with reports for objects within this location.
 * replica_path - Path to the directory where replicas will be written.
 * activity_log - Configuration of the activity log, including severity level, name of the log file (to log to STDIO provide ~ as the filename), the size per log file and the number of log files to retain.
 
 pinecone.db
 -----------
 Sqlite3 database which records registration and validation information about bags being monitored by pinecone.
-
-Location Configuration
-============
-Each location registered as a preservation location should contain a "tps-info.yaml" file to mark it as a preservation location and to provide location specific configuration/documentation.  This file contains:
-
-* name - Identifier for the location, which must be unique.  It will be used as the name of the base directory containing bags from this location during replication.
-* contacts - A list of email addresses for people that should be contacted with reports for objects within this location.

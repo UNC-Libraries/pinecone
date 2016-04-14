@@ -10,20 +10,28 @@ require_relative '../lib/pinecone/preservation_actions'
 
 class TestReplication < Test::Unit::TestCase
   :tmp_test_dir
+  :test_data
   :db
   :replica_path
   :pres_actions
   :loc_manager
+  :basic_bag_path
   
   def setup
     @tmp_test_dir = Dir.mktmpdir
     FileUtils.cp("test-data/config.yaml", @tmp_test_dir)
+    @test_data = File.join(@tmp_test_dir, "test-data")
+    FileUtils.mkdir(@test_data)
+    FileUtils.cp_r("test-data/simple-loc", @test_data)
+    FileUtils.cp_r("test-data/invalid-loc", @test_data)
     
     Pinecone::Environment.setup_env(@tmp_test_dir)
     
     @replica_path = File.join(@tmp_test_dir, "replicas")
     FileUtils.mkdir @replica_path
     Pinecone::Environment.set_replica_path(@replica_path)
+    
+    @basic_bag_path = File.join(@test_data, "simple-loc/basic_bag")
     
     Pinecone::setup_database
     
@@ -46,7 +54,7 @@ class TestReplication < Test::Unit::TestCase
   
   def test_replication
 
-    bag = Pinecone::PreservationBag.new("test-data/simple-loc/basic_bag")
+    bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
     @pres_actions.replicate_bag(bag)
 
@@ -62,7 +70,7 @@ class TestReplication < Test::Unit::TestCase
     FileUtils.mkdir_p(replica_bag)
     FileUtils.cp("test-data/simple-loc/basic_bag/bagit.txt", replica_bag)
 
-    bag = Pinecone::PreservationBag.new("test-data/simple-loc/basic_bag")
+    bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
     result_path = @pres_actions.replicate_bag(bag)
 
@@ -76,9 +84,7 @@ class TestReplication < Test::Unit::TestCase
     FileUtils.chmod_R("a-w", @replica_path)
     begin
 
-      bag = Pinecone::PreservationBag.new("test-data/simple-loc/basic_bag")
-
-      # @pres_actions.mailer.expects(:send_replication_failed_report).at_least_once
+      bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
       assert_raise Pinecone::ReplicationError do
         @pres_actions.replicate_bag(bag)
@@ -92,7 +98,7 @@ class TestReplication < Test::Unit::TestCase
   end
 
   def test_replicate_new
-    bag = Pinecone::PreservationBag.new "test-data/simple-loc/basic_bag"
+    bag = Pinecone::PreservationBag.new @basic_bag_path
 
     # Set the bag as having already validated
     @db.execute("update bags set valid = 'true', lastValidated = CURRENT_TIMESTAMP")
@@ -109,13 +115,13 @@ class TestReplication < Test::Unit::TestCase
   end
   
   def test_replicate_new_invalid_bag
-    FileUtils.cp_r("test-data/simple-loc", @tmp_test_dir)
     
-    pres_loc = File.join(@tmp_test_dir, "simple-loc")
-    Pinecone::Environment.set_preservation_locations [pres_loc]
+    #pres_loc = File.join(@test_data, "simple-loc")
+    Pinecone::Environment.get_preservation_locations.delete("invalid-loc")
+    #Pinecone::Environment.set_preservation_locations [pres_loc]
     setup_instances
     
-    bag_path = File.join(pres_loc, "basic_bag")
+    bag_path = @basic_bag_path
     
     # Delete the data file so that the replica won't match the oxum
     FileUtils.rm File.join(bag_path, "data/test_file")

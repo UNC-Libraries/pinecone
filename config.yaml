@@ -1,5 +1,8 @@
 preservation_locations:
-  - test-data/simple-loc
+  simple-tps-loc:
+    path: test-data/simple-loc
+    contacts:
+      - test@example.com
 admin_email:
   - bbpennel@email.unc.edu
 from_email: cdr-tps@unc.edu

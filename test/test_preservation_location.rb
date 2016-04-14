@@ -2,8 +2,16 @@ require "test/unit"
 require_relative '../lib/pinecone/preservation_location'
 
 class TestPreservationLocation < Test::Unit::TestCase
+  :loc_config
+  
+  def setup
+    config = YAML.load_file("test-data/config.yaml")
+    @loc_config = config["preservation_locations"]
+  end
+  
   def test_get_contact_emails
-    loc = Pinecone::PreservationLocation.new "test-data/simple-loc"
+    loc = Pinecone::PreservationLocation.new("simple-tps-loc",
+        @loc_config["simple-tps-loc"])
     contacts = loc.get_contact_emails
     
     assert_equal(1, contacts.length)
@@ -11,14 +19,16 @@ class TestPreservationLocation < Test::Unit::TestCase
   end
   
   def test_get_contact_emails_no_yaml
-    loc = Pinecone::PreservationLocation.new "test-data/invalid-loc"
+    loc = Pinecone::PreservationLocation.new("invalid-loc",
+        @loc_config["invalid-loc"])
     contacts = loc.get_contact_emails
     
     assert_equal(0, contacts.length)
   end
   
   def test_get_bag_paths
-    loc = Pinecone::PreservationLocation.new "test-data/simple-loc"
+    loc = Pinecone::PreservationLocation.new("simple-tps-loc",
+        @loc_config["simple-tps-loc"])
     paths = loc.get_bag_paths
     
     assert_equal(1, paths.length)
@@ -27,7 +37,8 @@ class TestPreservationLocation < Test::Unit::TestCase
   end
   
   def test_get_bag_paths_multiple
-    loc = Pinecone::PreservationLocation.new "test-data/invalid-loc"
+    loc = Pinecone::PreservationLocation.new("invalid-loc",
+        @loc_config["invalid-loc"])
     paths = loc.get_bag_paths
     
     assert_equal(3, paths.length)

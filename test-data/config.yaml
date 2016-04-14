@@ -1,6 +1,10 @@
 preservation_locations:
-  - test-data/simple-loc
-  - test-data/invalid-loc
+  simple-tps-loc:
+    path: test-data/simple-loc
+    contacts:
+      - test@example.com
+  invalid-loc:
+    path: test-data/invalid-loc
 admin_email:
   - test@example.com
 from_email: cdr-tps@unc.edu
