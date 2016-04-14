@@ -3,19 +3,21 @@ require_relative 'lib/pinecone/setup'
 require_relative 'lib/pinecone/environment'
 require_relative 'lib/pinecone/preservation_actions'
 
-Pinecone::Environment.setup_env(ENV["PINECONE_DATA"] || ".")
+task :init_env do
+  Pinecone::Environment.setup_env(ENV["PINECONE_DATA"] || ".")
+end
 
-task :validate_new do
+task :validate_new => :init_env do
   pres_actions = Pinecone::PreservationActions.new
   pres_actions.validate_new_bags
 end
 
-task :replicate_new do
+task :replicate_new => :init_env do
   pres_actions = Pinecone::PreservationActions.new
   pres_actions.replicate_new_bags
 end
 
-task :setup do
+task :setup => :init_env do
   Pinecone::setup_database
 end
 
