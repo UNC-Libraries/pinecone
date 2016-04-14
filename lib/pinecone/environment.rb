@@ -8,7 +8,7 @@ module Pinecone
     @@db = nil
     @@pres_locs = nil
     @@logger = nil
-    @@replica_dir = nil
+    @@replica_path = nil
     
     def Environment.setup_env(data_dir)
       @@data_dir = data_dir
@@ -17,7 +17,7 @@ module Pinecone
       self.set_db
       self.set_logger
       self.set_preservation_locations(@@config["preservation_locations"])
-      self.set_replica_dir(@@config["replica_dir"])
+      self.set_replica_path(@@config["replica_path"])
     end
     
     def Environment.get_db
@@ -64,12 +64,12 @@ module Pinecone
       return @@data_dir
     end
     
-    def Environment.get_replica_dir
-      return @@replica_dir
+    def Environment.get_replica_path
+      return @@replica_path
     end
     
-    def Environment.set_replica_dir(replica_dir)
-      @@replica_dir = replica_dir
+    def Environment.set_replica_path(replica_path)
+      @@replica_path = replica_path
     end
   end
 end

@@ -25,6 +25,8 @@ module Pinecone
       @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations)
     end
     
+    # Validate bags in all configured locations that have not previously been validated or attempted to validate
+    # If a bag is incomplete, attempts to allow for the fact it may still be in the process of being added to the location
     def validate_new_bags
       known_validated = Array.new
       # Retrieve list of bags that have been validated
@@ -55,6 +57,7 @@ module Pinecone
       end
     end
     
+    # Replicate all bags that have not previously been replicated
     def replicate_new_bags
       unreplicated = Array.new
       # Retrieve list of bags that have been replicated
@@ -92,6 +95,8 @@ module Pinecone
       end
     end
   
+    # Replicates the given bag to the configured replica destination.  Replicas are placed into subdirectories
+    # based on the name attribute or directory name of the preservation location they came from
     def replicate_bag(bag)
       pres_loc = @loc_manager.get_location_by_path(bag.bag_path)
       

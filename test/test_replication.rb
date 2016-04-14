@@ -11,7 +11,7 @@ require_relative '../lib/pinecone/preservation_actions'
 class TestReplication < Test::Unit::TestCase
   :tmp_test_dir
   :db
-  :replica_dir
+  :replica_path
   :pres_actions
   :loc_manager
   
@@ -21,9 +21,9 @@ class TestReplication < Test::Unit::TestCase
     
     Pinecone::Environment.setup_env(@tmp_test_dir)
     
-    @replica_dir = File.join(@tmp_test_dir, "replicas")
-    FileUtils.mkdir @replica_dir
-    Pinecone::Environment.set_replica_dir(@replica_dir)
+    @replica_path = File.join(@tmp_test_dir, "replicas")
+    FileUtils.mkdir @replica_path
+    Pinecone::Environment.set_replica_path(@replica_path)
     
     Pinecone::setup_database
     
@@ -50,7 +50,7 @@ class TestReplication < Test::Unit::TestCase
 
     @pres_actions.replicate_bag(bag)
 
-    replica_bag = File.join(@replica_dir, "simple-tps-loc/basic_bag")
+    replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
     assert_true(File.exist? replica_bag)
     assert_equal(5, Dir.glob(File.join(replica_bag, "**/*")).length)
   end
@@ -58,7 +58,7 @@ class TestReplication < Test::Unit::TestCase
   def test_replication_already_exists
 
     # Add partially populated bag to destination to simulate resumption
-    replica_bag = File.join(Pinecone::Environment.get_replica_dir, "simple-tps-loc/basic_bag")
+    replica_bag = File.join(Pinecone::Environment.get_replica_path, "simple-tps-loc/basic_bag")
     FileUtils.mkdir_p(replica_bag)
     FileUtils.cp("test-data/simple-loc/basic_bag/bagit.txt", replica_bag)
 
@@ -72,8 +72,8 @@ class TestReplication < Test::Unit::TestCase
 
   def test_replication_invalid_destination
     # Make the destination unwritteable so that replication will fail
-    FileUtils.mkdir File.join(@replica_dir, "simple-tps-loc")
-    FileUtils.chmod_R("a-w", @replica_dir)
+    FileUtils.mkdir File.join(@replica_path, "simple-tps-loc")
+    FileUtils.chmod_R("a-w", @replica_path)
     begin
 
       bag = Pinecone::PreservationBag.new("test-data/simple-loc/basic_bag")
@@ -84,10 +84,10 @@ class TestReplication < Test::Unit::TestCase
         @pres_actions.replicate_bag(bag)
       end
 
-      replica_bag = File.join(@replica_dir, "simple-tps-loc/basic_bag")
+      replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
       assert_false(File.exist? replica_bag)
     ensure
-      FileUtils.chmod_R("a+w", @replica_dir)
+      FileUtils.chmod_R("a+w", @replica_path)
     end
   end
 
@@ -99,7 +99,7 @@ class TestReplication < Test::Unit::TestCase
 
     @pres_actions.replicate_new_bags
 
-    replica_bag = File.join(@replica_dir, "simple-tps-loc/basic_bag")
+    replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
     assert_true(File.exist? replica_bag)
     assert_equal(5, Dir.glob(File.join(replica_bag, "**/*")).length)
 
@@ -131,7 +131,7 @@ class TestReplication < Test::Unit::TestCase
     @pres_actions.replicate_new_bags
 
     # Validation failed, but not replication, so the destination should still be populated
-    replica_bag = File.join(@replica_dir, "simple-tps-loc/basic_bag")
+    replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
     assert_true(File.exist? replica_bag)
     assert_equal(4, Dir.glob(File.join(replica_bag, "**/*")).length)
     

@@ -47,7 +47,7 @@ module Pinecone
     
     # Returns the replica path for this location
     def get_replica_path
-      return File.join(Pinecone::Environment.get_replica_dir, @loc_key)
+      return File.join(Pinecone::Environment.get_replica_path, @loc_key)
     end
   end
 end
