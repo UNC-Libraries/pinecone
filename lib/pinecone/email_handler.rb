@@ -7,10 +7,11 @@ module Pinecone
     attr_accessor :from_address
     attr_accessor :email_on_error
     :invalid_bag_template
+    :repl_failed_template
     
     def initialize
       @invalid_bag_template = File.read("data/templates/invalid_bag.html.mustache")
-      @invalid_bag_template = File.read("data/templates/replication_failed.html.mustache")
+      @repl_failed_template = File.read("data/templates/replication_failed.html.mustache")
     end
     
     def send_invalid_bag_report(bag, to_addresses)
@@ -43,7 +44,7 @@ module Pinecone
       end
       mail.to = @email_on_error
       mail.from = @from_address
-      mail.body = report.render(@invalid_bag_template)
+      mail.body = report.render(@repl_failed_template)
       
       mail.deliver!
     end
