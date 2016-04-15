@@ -39,18 +39,20 @@ module Pinecone
 
       #validate all of the previously unvalidated bags
       unvalidated_bags = bag_paths - known_validated
+      @logger.debug "Preparing to perform first time validation of #{unvalidated_bags.length} bags"
+      
       unvalidated_bags.each do |bag_path|
         bag = Pinecone::PreservationBag.new(bag_path)
   
-        @logger.info "Checking on unvalidated bag #{bag_path}"
+        @logger.debug "Checking on unvalidated bag #{bag_path}"
   
         validation_result = bag.validate_if_complete
         if validation_result == true
-          @logger.info "Bag #{bag_path} was valid"
+          @logger.info "Validation of new bag passed: #{bag_path}"
         elsif validation_result == "inprogress"
-          @logger.warn "Bag #{bag_path} was incomplete but may still be in progress of being added"
+          @logger.warn "Validation of new bag failed due to being incomplete but adding it to the location may still be in progress: #{bag_path}"
         else
-          @logger.warn "Bag #{bag_path} was invalid, sending report"
+          @logger.warn "Validation of new bag failed: #{bag_path}"
           pres_loc = @loc_manager.get_location_by_path(bag_path)
           @mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
         end
@@ -75,7 +77,7 @@ module Pinecone
       #replicate bags that have been validated but not yet replicated
       unreplicated.each do |bag_path|
         bag = Pinecone::PreservationBag.new(bag_path)
-        @logger.debug("Replicate bag #{bag_path}")
+        @logger.debug("Replicating bag #{bag_path}")
         
         all_replicas_created = true
         replica_paths.each do |replica_base_path|
