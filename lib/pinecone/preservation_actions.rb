@@ -61,7 +61,7 @@ module Pinecone
     def replicate_new_bags
       unreplicated = Array.new
       # Retrieve list of bags that have been replicated
-      @db.execute( "select path from bags where (replicated is null or replicated == 'false') and valid == 'true'" ) do |row|
+      @db.execute("select path from bags where (replicated is null or replicated == 'false') and valid == 'true' and isReplica == 'false'" ) do |row|
         unreplicated.push row[0]
       end
       
@@ -69,41 +69,50 @@ module Pinecone
       
       # Get a list of potential bag directories from all preservation locations
       bag_paths = @loc_manager.get_bag_paths
+      
+      replica_paths = Pinecone::Environment.get_replica_paths
 
       #replicate bags that have been validated but not yet replicated
       unreplicated.each do |bag_path|
         bag = Pinecone::PreservationBag.new(bag_path)
         @logger.debug("Replicate bag #{bag_path}")
         
-        replica_path = nil
-        begin
-          replica_path = replicate_bag(bag)
-          @db.execute("update bags set replicaPath = ?, replicated = 'true' where path = ?", replica_path, bag.bag_path)
-        rescue Pinecone::ReplicationError => e
-          @logger.error e
-          @mailer.send_replication_failed_report(bag, e.replica_path, e.errors)
-          next
+        all_replicas_created = true
+        replica_paths.each do |replica_base_path|
+          replica_bag = nil
+          begin
+            replica_bag = replicate_bag(bag, replica_base_path)
+          rescue Pinecone::ReplicationError => e
+            @logger.error e
+            @mailer.send_replication_failed_report(bag, e.replica_path, e.errors)
+            next
+          end
+          
+          @db.execute("update bags set originalPath = ? where path = ?", bag.bag_path, replica_bag.bag_path)
+          
+          # Quick verification that the replication was successful by checking the filesizes and number of files
+          if replica_bag.valid_oxum?
+            @logger.info("Replica passed 0xum validation: #{replica_bag.bag_path}")
+          else
+            @logger.error("Replica for #{bag_path} failed 0xum validation: #{replica_bag.bag_path}")
+            @mailer.send_replication_failed_report(bag, replica_bag.bag_path, ["Replica failed oxum validation"])
+          end
         end
         
-        # Quick verification that the replication was successful by checking the filesizes and number of files
-        if bag.valid_oxum?
-          @logger.info("Replica passed 0xum validation: #{replica_path}")
-        else
-          @logger.error("Replica for #{bag_path} failed 0xum validation: #{replica_path}")
-          @mailer.send_replication_failed_report(bag, replica_path, ["Replica failed oxum validation"])
+        if all_replicas_created
+          @db.execute("update bags set replicated = 'true' where path = ?", bag.bag_path)
         end
       end
     end
   
     # Replicates the given bag to the configured replica destination.  Replicas are placed into subdirectories
     # based on the name attribute or directory name of the preservation location they came from
-    def replicate_bag(bag)
-      puts bag.bag_path
-      puts @loc_manager.pres_locs
+    # Returns a PreservationBag object for the replica if successful
+    def replicate_bag(bag, replica_base)
       pres_loc = @loc_manager.get_location_by_path(bag.bag_path)
       
       # Build the path for replicas from this preservation location
-      replica_path = pres_loc.get_replica_path
+      replica_path = pres_loc.get_replica_path replica_base
       if !(File.exist? replica_path)
         @logger.info("Creating new replica location #{replica_path}")
         FileUtils.mkdir replica_path
@@ -112,7 +121,7 @@ module Pinecone
       Rsync.run(Shellwords.shellescape(bag.bag_path), Shellwords.shellescape(replica_path), "-r") do |result|
         @logger.info("Successfully replicated bag #{bag.bag_path} to #{replica_path}")
         if result.success?
-          return File.join(replica_path, bag.bag_name)
+          return Pinecone::PreservationBag.new(File.join(replica_path, bag.bag_name), true) 
         end
         
         raise Pinecone::ReplicationError.new(replica_path, result.error), "Failed to replicate bag #{bag.bag_path} to #{replica_path}"

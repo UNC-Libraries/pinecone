@@ -13,4 +13,5 @@ activity_log:
   level: "Logger::DEBUG"
   max_logs: ~
   max_size: ~
-replica_path: ./replicas
+replica_paths:
+  - ./replicas

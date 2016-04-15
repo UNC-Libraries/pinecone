@@ -10,12 +10,14 @@ module Pinecone
     rows = db.execute <<-SQL
       create table bags (
         path TEXT PRIMARY KEY,
+        valid BOOLEAN,
         lastValidated INTEGER,
-        replicated BOOLEAN,
-        replicaPath text,
         complete BOOLEAN,
         completeProgress NUMERIC,
-        valid BOOLEAN
+        replicated BOOLEAN,
+        isReplica BOOLEAN,
+        originalPath TEXT,
+        capturedTime INTEGER
       );
     SQL
     

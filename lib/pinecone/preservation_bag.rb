@@ -6,16 +6,19 @@ module Pinecone
     attr_accessor :bag, :bag_path
     :db
     :env
+    attr_reader :is_replica
     
-    def initialize(bag_path)
+    def initialize(bag_path, is_replica=false)
       if !(File.exist? bag_path)
         raise "Bag path #{bag_path} did not exist, cannot create PreservationBag"
       end
       @bag_path = File.absolute_path bag_path
       @bag = BagIt::Bag.new @bag_path
       @db = Pinecone::Environment.get_db
+      @is_replica = is_replica
       
-      @db.execute("insert or ignore into bags (path) values (?) ", [@bag_path])
+      # Create database entry for this bag if it does not already exist
+      @db.execute("insert or ignore into bags (path, isReplica, capturedTime) values (?, ?, CURRENT_TIMESTAMP) ", @bag_path, "#{@is_replica}")
     end
     
     def bag_name
@@ -41,7 +44,7 @@ module Pinecone
     
     # Checks that the size of the data and number of files matches expected values
     def valid_oxum?
-      return @bag.valid_oxum?
+      return report_validity(@bag.valid_oxum?)
     end
     
     # Verifies that a bag is complete, if so then performs consistency checks.

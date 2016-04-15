@@ -18,7 +18,7 @@ module Pinecone
       self.set_db
       self.set_logger
       self.set_preservation_locations(@@config["preservation_locations"])
-      self.set_replica_path(@@config["replica_path"])
+      self.set_replica_paths(@@config["replica_paths"])
     end
     
     def Environment.get_db
@@ -76,12 +76,20 @@ module Pinecone
       return @@data_dir
     end
     
-    def Environment.get_replica_path
-      return @@replica_path
+    def Environment.get_replica_paths
+      return @@replica_paths
     end
     
-    def Environment.set_replica_path(replica_path)
-      @@replica_path = replica_path
+    def Environment.set_replica_paths(replica_paths)
+      @@replica_paths = replica_paths
+    end
+    
+    def Environment.get_revalidate_after
+      time_diff = @@config["revalidate_after"].strip
+      if !(time_diff.start_with? "-")
+        time_diff = "-#{time_diff}"
+      end
+      return time_diff
     end
   end
 end

@@ -29,7 +29,7 @@ class TestReplication < Test::Unit::TestCase
     
     @replica_path = File.join(@tmp_test_dir, "replicas")
     FileUtils.mkdir @replica_path
-    Pinecone::Environment.set_replica_path(@replica_path)
+    Pinecone::Environment.set_replica_paths([@replica_path])
     
     @basic_bag_path = File.join(@test_data, "simple-loc/basic_bag")
     
@@ -56,7 +56,7 @@ class TestReplication < Test::Unit::TestCase
 
     bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
-    @pres_actions.replicate_bag(bag)
+    @pres_actions.replicate_bag(bag, Pinecone::Environment.get_replica_paths[0])
 
     replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
     assert_true(File.exist? replica_bag)
@@ -66,16 +66,16 @@ class TestReplication < Test::Unit::TestCase
   def test_replication_already_exists
 
     # Add partially populated bag to destination to simulate resumption
-    replica_bag = File.join(Pinecone::Environment.get_replica_path, "simple-tps-loc/basic_bag")
+    replica_bag = File.join(Pinecone::Environment.get_replica_paths[0], "simple-tps-loc/basic_bag")
     FileUtils.mkdir_p(replica_bag)
     FileUtils.cp("test-data/simple-loc/basic_bag/bagit.txt", replica_bag)
 
     bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
-    result_path = @pres_actions.replicate_bag(bag)
+    replica_bag = @pres_actions.replicate_bag(bag, Pinecone::Environment.get_replica_paths[0])
 
-    assert_true(File.exist? result_path)
-    assert_equal(5, Dir.glob(File.join(result_path, "**/*")).length)
+    assert_true(File.exist? replica_bag.bag_path)
+    assert_equal(5, Dir.glob(File.join(replica_bag.bag_path, "**/*")).length)
   end
 
   def test_replication_invalid_destination
@@ -87,7 +87,7 @@ class TestReplication < Test::Unit::TestCase
       bag = Pinecone::PreservationBag.new(@basic_bag_path)
 
       assert_raise Pinecone::ReplicationError do
-        @pres_actions.replicate_bag(bag)
+        @pres_actions.replicate_bag(bag, Pinecone::Environment.get_replica_paths[0])
       end
 
       replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
@@ -109,16 +109,17 @@ class TestReplication < Test::Unit::TestCase
     assert_true(File.exist? replica_bag)
     assert_equal(5, Dir.glob(File.join(replica_bag, "**/*")).length)
 
-    result = @db.get_first_row("select replicated, replicaPath from bags where path = ?", bag.bag_path)
+    result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
     assert_equal("true", result[0])
-    assert_equal(replica_bag, result[1])
+    
+    replica_result = @db.get_first_row("select path, isReplica from bags where originalPath = ?", bag.bag_path)
+    assert_equal(replica_bag, replica_result[0])
+    assert_equal("true", replica_result[1])
   end
   
   def test_replicate_new_invalid_bag
     
-    #pres_loc = File.join(@test_data, "simple-loc")
     Pinecone::Environment.get_preservation_locations.delete("invalid-loc")
-    #Pinecone::Environment.set_preservation_locations [pres_loc]
     setup_instances
     
     bag_path = @basic_bag_path
@@ -141,8 +142,41 @@ class TestReplication < Test::Unit::TestCase
     assert_true(File.exist? replica_bag)
     assert_equal(4, Dir.glob(File.join(replica_bag, "**/*")).length)
     
-    result = @db.get_first_row("select replicated, replicaPath from bags where path = ?", bag.bag_path)
+    result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
     assert_equal("true", result[0])
-    assert_equal(replica_bag, result[1])
+    
+    replica_result = @db.get_first_row("select path, isReplica from bags where originalPath = ?", bag.bag_path)
+    assert_equal(replica_bag, replica_result[0])
+    assert_equal("true", replica_result[1])
+  end
+  
+  def test_replicate_new_multiple_destinations
+    replica2_path = File.join(@tmp_test_dir, "replicas2")
+    FileUtils.mkdir replica2_path
+    Pinecone::Environment.set_replica_paths([@replica_path, replica2_path])
+    
+    bag = Pinecone::PreservationBag.new @basic_bag_path
+
+    # Set the bag as having already validated
+    @db.execute("update bags set valid = 'true', lastValidated = CURRENT_TIMESTAMP")
+
+    @pres_actions.replicate_new_bags
+
+    replica_bag = File.join(@replica_path, "simple-tps-loc/basic_bag")
+    assert_true(File.exist? replica_bag)
+    assert_equal(5, Dir.glob(File.join(replica_bag, "**/*")).length)
+    
+    replica2_bag = File.join(replica2_path, "simple-tps-loc/basic_bag")
+    assert_true(File.exist? replica2_bag)
+    assert_equal(5, Dir.glob(File.join(replica2_bag, "**/*")).length)
+
+    result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
+    assert_equal("true", result[0])
+    
+    replica_results = @db.execute("select path, isReplica from bags where originalPath = ? order by path asc", bag.bag_path)
+    assert_equal(replica_bag, replica_results[0][0])
+    assert_equal("true", replica_results[0][1])
+    assert_equal(replica2_bag, replica_results[1][0])
+    assert_equal("true", replica_results[1][1])
   end
 end
