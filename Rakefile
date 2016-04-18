@@ -3,6 +3,8 @@ require_relative 'lib/pinecone/setup'
 require_relative 'lib/pinecone/environment'
 require_relative 'lib/pinecone/preservation_actions'
 
+task :default => :test
+
 task :init_env do
   Pinecone::Environment.setup_env(ENV["PINECONE_DATA"] || ".")
 end
