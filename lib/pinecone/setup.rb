@@ -1,6 +1,7 @@
 require 'sqlite3'
 
 module Pinecone
+  # Initializes the sqlite database in the configured data directory.  Replaces an existing database if one is present, so use with care.
   def Pinecone.setup_database
     Pinecone::Environment.logger.unknown "Initializing pinecone database in #{File.absolute_path Pinecone::Environment.get_data_dir}"
     
