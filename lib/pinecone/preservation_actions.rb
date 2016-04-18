@@ -44,7 +44,7 @@ module Pinecone
       unvalidated_bags.each do |bag_path|
         bag = Pinecone::PreservationBag.new(bag_path)
   
-        @logger.debug "Checking on unvalidated bag #{bag_path}"
+        @logger.info "Validating new bag: #{bag_path}"
   
         validation_result = bag.validate_if_complete
         if validation_result == true
@@ -77,7 +77,7 @@ module Pinecone
       #replicate bags that have been validated but not yet replicated
       unreplicated.each do |bag_path|
         bag = Pinecone::PreservationBag.new(bag_path)
-        @logger.debug("Replicating bag #{bag_path}")
+        @logger.info("Replicating bag #{bag_path}")
         
         all_replicas_created = true
         replica_paths.each do |replica_base_path|
@@ -116,7 +116,7 @@ module Pinecone
       # Build the path for replicas from this preservation location
       replica_path = pres_loc.get_replica_path replica_base
       if !(File.exist? replica_path)
-        @logger.info("Creating new replica location #{replica_path}")
+        @logger.debug("Creating new replica location #{replica_path}")
         FileUtils.mkdir replica_path
       end
     
@@ -127,6 +127,37 @@ module Pinecone
         end
         
         raise Pinecone::ReplicationError.new(replica_path, result.error), "Failed to replicate bag #{bag.bag_path} to #{replica_path}"
+      end
+    end
+    
+    # Perform validation of bags which are already registered and validated, but have no been validated recently
+    def periodic_validate
+      need_revalidation = Array.new
+      # Retrieve list of bags and replicas that have not been validated within the configured validation window
+      @db.execute( "select path from bags where valid = 'true' and datetime(lastValidated) <= datetime('now', ?)",
+          Pinecone::Environment.get_periodic_validation_period) do |row|
+        need_revalidation.push row[0]
+      end
+      
+      @logger.debug "Preparing to perform periodic validation of #{need_revalidation.length} bags"
+      
+      need_revalidation.each do |bag_path|
+        bag = Pinecone::PreservationBag.new(bag_path)
+  
+        @logger.info "Performing periodic validation of bag: #{bag_path}"
+
+        if bag.valid?
+          @logger.info "Periodic validation of bag passed: #{bag_path}"
+        else
+          @logger.warn "Periodic validation of bag failed: #{bag_path}"
+          original_path = bag_path
+          if bag.is_replica?
+            # for replicas, need to get preservation location for the original copy to determine who to email
+            original_path = @db.get_first_row("select originalPath from bags where path = ?", bag.bag_path)[0]
+          end
+          pres_loc = @loc_manager.get_location_by_path(original_path)
+          @mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
+        end
       end
     end
   end

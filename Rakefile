@@ -17,12 +17,17 @@ task :replicate_new => :init_env do
   pres_actions.replicate_new_bags
 end
 
+task :periodic_validate => :init_env do
+  pres_actions = Pinecone::PreservationActions.new
+  pres_actions.periodic_validate
+end
+
 task :setup => :init_env do
   Pinecone::setup_database
 end
 
 Rake::TestTask.new do |t|
   t.libs << "test"
-  t.test_files = FileList['test/test*.rb']
+  t.test_files = FileList['test/test_*.rb']
   t.verbose = true
 end

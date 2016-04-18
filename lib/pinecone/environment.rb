@@ -84,8 +84,8 @@ module Pinecone
       @@replica_paths = replica_paths
     end
     
-    def Environment.get_revalidate_after
-      time_diff = @@config["revalidate_after"].strip
+    def Environment.get_periodic_validation_period
+      time_diff = @@config["periodic_validation_period"]
       if !(time_diff.start_with? "-")
         time_diff = "-#{time_diff}"
       end

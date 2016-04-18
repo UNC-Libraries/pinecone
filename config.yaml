@@ -13,3 +13,5 @@ activity_log:
   max_size: ~
 replica_paths:
   - ~
+# Stored in sqlite3 time difference notation
+periodic_validation_period: 1 minute
