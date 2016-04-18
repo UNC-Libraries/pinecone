@@ -160,5 +160,41 @@ module Pinecone
         end
       end
     end
+    
+    # Removes database entries for original bags which no longer exist in the filesystem
+    def cleanup_removed_bags
+      original_bags = Array.new
+      # Retrieve list of bags that have been validated
+      @db.execute("select path from bags where isReplica is null or isReplica = 'false'" ) do |row|
+        original_bags.push row[0]
+      end
+      
+      # Get a list of potential bag directories from all preservation locations
+      bag_paths = @loc_manager.get_bag_paths
+      
+      # Get bags which are in the database but not in a preservation location anymore
+      missing_bags = original_bags - bag_paths
+      @logger.debug("Cleaning up #{missing_bags.length} records for bags which have been removed")
+      missing_bags.each do |original_path|
+        @logger.info("Cleaning up record for absent original bag: #{original_path}")
+        @db.execute("delete from bags where path = ?", original_path)
+      end
+    end
+    
+    # Deletes replica bags which reference original bags that no longer exist
+    def cleanup_orphaned_replicas
+      results = @db.execute(
+          "select repls.path, repls.originalPath
+          from bags as repls left outer join bags as originals on (repls.originalPath = originals.path)
+          where repls.isReplica = 'true' and originals.path is null")
+      
+      @logger.debug("Cleaning up #{results.length} replicas for originals that no longer exist")
+      
+      results.each do |row|
+        @logger.info("Removing replica for absent original bag #{row[1]}: #{row[0]}")
+        FileUtils.rm_r row[0]
+        @db.execute("delete from bags where path = ?", row[0])
+      end
+    end
   end
 end
