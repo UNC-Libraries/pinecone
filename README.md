@@ -8,10 +8,10 @@ Performs basic preservation activities upon bagit bags located within a given se
     * consistency - checksums of files in the payload match those recorded in the bag manifest
   * If a bag is invalid, an error report email is sent out to administrators and content owners who are locally configured to receive notifications for that location.
 * Replication of bags
-  * After bags have been validated the first time, they are replicated to a configured replica location using rsync.
+  * After bags have been validated the first time, they are replicated to one or more configured replica locations using rsync.
   * After replication completes, the bag in the replica location is 0xum validated (total filesize and file count)
-  * If replication fails, administrators are emailed.
-* Periodic validation of bags - After a configured number of days since the last validation, bags (and their replicas) will be validated again.
+  * If replication or validation fail, administrators are emailed.
+* Periodic validation of bags - After a configured period of time since the last validation, bags and their replicas will be validated again.
   * If validation fails, administrators and content owners will be notified.
 
 All actions and their outcomes are recorded to a central log.  
@@ -29,7 +29,8 @@ Primary configuration for the application.  Includes:
   * name (key) - Identifier for the location, which must be unique.  It will be used as the name of the base directory containing bags from this location during replication.
   * path - File path for the location.  If it is relative, it will be evaluated relative to PINECONE_DATA.
   * contacts - A list of email addresses for people that should be contacted with reports for objects within this location.
-* replica_path - Path to the directory where replicas will be written.
+* periodic_validation_period - Amount of time between validation checks per bag after the initial check.  The time is specified using sqlite date modifiers, for example "90 days": https://www.sqlite.org/lang_datefunc.html
+* replica_paths - A list of paths to which replicas will be written.
 * activity_log - Configuration of the activity log, including severity level, name of the log file (to log to STDIO provide ~ as the filename), the size per log file and the number of log files to retain.
 
 pinecone.db
