@@ -7,7 +7,7 @@ preservation_locations:
     path: test-data/invalid-loc
 admin_email:
   - test@example.com
-from_email: cdr-tps@unc.edu
+from_email: pinecone@example.com
 activity_log:
   filename: ~
   level: "Logger::DEBUG"

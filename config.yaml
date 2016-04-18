@@ -4,7 +4,7 @@ preservation_locations:
     contacts:
       - test@example.com
 admin_email:
-  - bbpennel@email.unc.edu
+  - test-admin@example.com
 from_email: cdr-tps@unc.edu
 activity_log:
   filename: ~
@@ -14,4 +14,4 @@ activity_log:
 replica_paths:
   - ~
 # Stored in sqlite3 time difference notation
-periodic_validation_period: 1 minute
+periodic_validation_period: 5 minutes
