@@ -17,6 +17,8 @@ task :replicate_new => :init_env do
   pres_actions.replicate_new_bags
 end
 
+task :process_new => [:init_env, :validate_new, :replicate_new]
+
 task :periodic_validate => :init_env do
   pres_actions = Pinecone::PreservationActions.new
   pres_actions.periodic_validate
