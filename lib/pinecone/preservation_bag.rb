@@ -19,7 +19,7 @@ module Pinecone
       
       # Create database entry for this bag if it does not already exist
       @db.execute("insert or ignore into bags (path, isReplica, capturedTime) values (?, ?, CURRENT_TIMESTAMP) ",
-          @bag_path, "#{(@is_replica == true)? 'true' : 'false'}")
+          @bag_path, "#{(@is_replica == true)? 1 : 0}")
     end
     
     def bag_name
@@ -28,7 +28,7 @@ module Pinecone
     
     # Validates the bag, returning true if valid, or an array of errors if not
     def report_validity(success)
-      @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = '#{success}' where path = '#{@bag_path}'")
+      @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = '#{(success)? 1 : 0}' where path = '#{@bag_path}'")
   
       return success
     end
@@ -60,7 +60,7 @@ module Pinecone
     def validate_if_complete
       if @bag.complete?
         # Bag was complete, proceed with the more intensive parts 
-        @db.execute("update bags set complete = 'true' where path = '#{@bag_path}'")
+        @db.execute("update bags set complete = 1 where path = '#{@bag_path}'")
     
         return consistent?
       end
@@ -78,7 +78,7 @@ module Pinecone
       if errors.any? { |error| error.end_with? "is present but not manifested" } ||
           errors.any? { |error| error.end_with? "is a manifested tag but not present" }
     
-        @db.execute("update bags set valid = 'false' where path = '#{@bag_path}'")
+        @db.execute("update bags set valid = 0 where path = '#{@bag_path}'")
         return false
       end
       
@@ -92,7 +92,7 @@ module Pinecone
 
       # No movement, assume that the bag is actually incomplete
       if row[0] != nil && count == row[0]
-        @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = 'false' where path = '#{@bag_path}'")
+        @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = 0 where path = '#{@bag_path}'")
         return false
       end
       

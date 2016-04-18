@@ -44,18 +44,18 @@ class TestPeriodicValidation < Test::Unit::TestCase
   
   def test_validation
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 'true', 0)
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
     
     @pres_actions.periodic_validate
     
     results = @db.get_first_row("select valid, lastValidated from bags where path = ?", bag_path)
-    assert_equal('true', results[0], "Validation status incorrectly changed")
+    assert_equal(1, results[0], "Validation status incorrectly changed")
     assert_true(results[1] > '1990', "Validation timestamp not updated")
   end
   
   def test_validation_no_candidates
     bag_path = File.join(@test_data, "invalid-loc/inconsistent_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 'true')
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 1)
     timestamp = @db.get_first_row("select lastValidated from bags where path = ?", bag_path)
     
     @pres_actions.mailer.expects(:send_invalid_bag_report).never
@@ -63,59 +63,59 @@ class TestPeriodicValidation < Test::Unit::TestCase
     @pres_actions.periodic_validate
     
     results = @db.get_first_row("select valid, lastValidated from bags where path = ?", bag_path)
-    assert_equal('true', results[0], "Validation status should not have changed")
+    assert_equal(1, results[0], "Validation status should not have changed")
     assert_equal(timestamp[0], results[1], "Validation timestamp should not have changed")
   end
   
   def test_validation_invalid
     bag_path = File.join(@test_data, "invalid-loc/inconsistent_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 'true', 0)
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
     
     @pres_actions.mailer.expects(:send_invalid_bag_report).at_least_once
     
     @pres_actions.periodic_validate
     
     results = @db.get_first_row("select valid, lastValidated from bags where path = ?", bag_path)
-    assert_equal('false', results[0], "Validation status did not get changed to false")
+    assert_equal(0, results[0], "Validation status did not get changed to false")
     assert_true(results[1] > '1990', "Validation timestamp not updated")
   end
   
   def test_validation_with_replica
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 'true', 0)
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
     FileUtils.cp_r("test-data/simple-loc", @replica_path)
     replica_bag_path = File.join(@replica_path, "simple-loc/basic_bag")
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, ?, ?, ?)",
-        replica_bag_path, 'true', 0, 'true', bag_path)
+        replica_bag_path, 1, 0, 1, bag_path)
   
     @pres_actions.periodic_validate
   
     results = @db.execute("select valid, lastValidated from bags order by isReplica asc")
-    assert_equal('true', results[0][0], "Validation status incorrectly changed")
+    assert_equal(1, results[0][0], "Validation status incorrectly changed")
     assert_true(results[0][1] > '1990', "Validation timestamp not updated")
     
-    assert_equal('true', results[1][0], "Replica validation status incorrectly changed")
+    assert_equal(1, results[1][0], "Replica validation status incorrectly changed")
     assert_true(results[1][1] > '1990', "Validation timestamp not updated")
   end
   
   def test_validation_with_invalid_replica
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 'true', 0)
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
     FileUtils.cp_r("test-data/simple-loc", @replica_path)
     replica_bag_path = File.join(@replica_path, "simple-loc/basic_bag")
     FileUtils.rm(File.join(replica_bag_path, "data/test_file"))
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, ?, ?, ?)",
-        replica_bag_path, 'true', 0, 'true', bag_path)
+        replica_bag_path, 1, 0, 1, bag_path)
   
     @pres_actions.mailer.expects(:send_invalid_bag_report).once
   
     @pres_actions.periodic_validate
   
     results = @db.execute("select valid, lastValidated from bags order by isReplica asc")
-    assert_equal('true', results[0][0], "Validation status incorrectly changed")
+    assert_equal(1, results[0][0], "Validation status incorrectly changed")
     assert_true(results[0][1] > '1990', "Validation timestamp not updated")
     
-    assert_equal('false', results[1][0], "Replica should now be invalid")
+    assert_equal(0, results[1][0], "Replica should now be invalid")
     assert_true(results[1][1] > '1990', "Validation timestamp not updated")
   end
 end

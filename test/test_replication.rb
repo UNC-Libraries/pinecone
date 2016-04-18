@@ -101,7 +101,7 @@ class TestReplication < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new @basic_bag_path
 
     # Set the bag as having already validated
-    @db.execute("update bags set valid = 'true', lastValidated = CURRENT_TIMESTAMP")
+    @db.execute("update bags set valid = 1, lastValidated = CURRENT_TIMESTAMP")
 
     @pres_actions.replicate_new_bags
 
@@ -110,11 +110,11 @@ class TestReplication < Test::Unit::TestCase
     assert_equal(5, Dir.glob(File.join(replica_bag, "**/*")).length)
 
     result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
-    assert_equal("true", result[0])
+    assert_equal(1, result[0])
     
     replica_result = @db.get_first_row("select path, isReplica from bags where originalPath = ?", bag.bag_path)
     assert_equal(replica_bag, replica_result[0])
-    assert_equal("true", replica_result[1])
+    assert_equal(1, replica_result[1])
   end
   
   def test_replicate_new_invalid_bag
@@ -133,7 +133,7 @@ class TestReplication < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new bag_path
     
     # Set the bag as having already validated, which is inaccurate in this case
-    @db.execute("update bags set valid = 'true', lastValidated = CURRENT_TIMESTAMP")
+    @db.execute("update bags set valid = 1, lastValidated = CURRENT_TIMESTAMP")
     
     @pres_actions.replicate_new_bags
 
@@ -143,11 +143,11 @@ class TestReplication < Test::Unit::TestCase
     assert_equal(4, Dir.glob(File.join(replica_bag, "**/*")).length)
     
     result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
-    assert_equal("true", result[0])
+    assert_equal(1, result[0])
     
     replica_result = @db.get_first_row("select path, isReplica from bags where originalPath = ?", bag.bag_path)
     assert_equal(replica_bag, replica_result[0])
-    assert_equal("true", replica_result[1])
+    assert_equal(1, replica_result[1])
   end
   
   def test_replicate_new_multiple_destinations
@@ -158,7 +158,7 @@ class TestReplication < Test::Unit::TestCase
     bag = Pinecone::PreservationBag.new @basic_bag_path
 
     # Set the bag as having already validated
-    @db.execute("update bags set valid = 'true', lastValidated = CURRENT_TIMESTAMP")
+    @db.execute("update bags set valid = 1, lastValidated = CURRENT_TIMESTAMP")
 
     @pres_actions.replicate_new_bags
 
@@ -171,12 +171,12 @@ class TestReplication < Test::Unit::TestCase
     assert_equal(5, Dir.glob(File.join(replica2_bag, "**/*")).length)
 
     result = @db.get_first_row("select replicated from bags where path = ?", bag.bag_path)
-    assert_equal("true", result[0])
+    assert_equal(1, result[0])
     
     replica_results = @db.execute("select path, isReplica from bags where originalPath = ? order by path asc", bag.bag_path)
     assert_equal(replica_bag, replica_results[0][0])
-    assert_equal("true", replica_results[0][1])
+    assert_equal(1, replica_results[0][1])
     assert_equal(replica2_bag, replica_results[1][0])
-    assert_equal("true", replica_results[1][1])
+    assert_equal(1, replica_results[1][1])
   end
 end

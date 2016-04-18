@@ -35,7 +35,7 @@ class TestCleanupRemoved < Test::Unit::TestCase
   
   def test_cleanup_removed_bags
     bag_path = File.join(@test_data, "simple-loc/a_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 'true')
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 1)
     
     @pres_actions.cleanup_removed_bags
     
@@ -46,7 +46,7 @@ class TestCleanupRemoved < Test::Unit::TestCase
     FileUtils.cp_r("test-data/simple-loc", @test_data)
     
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
-    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 'true')
+    @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)", bag_path, 1)
     
     @pres_actions.cleanup_removed_bags
     

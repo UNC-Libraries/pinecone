@@ -63,7 +63,7 @@ module Pinecone
     def replicate_new_bags
       unreplicated = Array.new
       # Retrieve list of bags that have been replicated
-      @db.execute("select path from bags where (replicated is null or replicated == 'false') and valid == 'true' and isReplica == 'false'" ) do |row|
+      @db.execute("select path from bags where (replicated is null or replicated == 0) and valid == 1 and isReplica == 0" ) do |row|
         unreplicated.push row[0]
       end
       
@@ -102,7 +102,7 @@ module Pinecone
         end
         
         if all_replicas_created
-          @db.execute("update bags set replicated = 'true' where path = ?", bag.bag_path)
+          @db.execute("update bags set replicated = 1 where path = ?", bag.bag_path)
         end
       end
     end
@@ -134,7 +134,7 @@ module Pinecone
     def periodic_validate
       need_revalidation = Array.new
       # Retrieve list of bags and replicas that have not been validated within the configured validation window
-      @db.execute( "select path from bags where valid = 'true' and datetime(lastValidated) <= datetime('now', ?)",
+      @db.execute( "select path from bags where valid = 1 and datetime(lastValidated) <= datetime('now', ?)",
           Pinecone::Environment.get_periodic_validation_period) do |row|
         need_revalidation.push row[0]
       end
@@ -165,7 +165,7 @@ module Pinecone
     def cleanup_removed_bags
       original_bags = Array.new
       # Retrieve list of bags that have been validated
-      @db.execute("select path from bags where isReplica is null or isReplica = 'false'" ) do |row|
+      @db.execute("select path from bags where isReplica is null or isReplica = 0" ) do |row|
         original_bags.push row[0]
       end
       
@@ -186,7 +186,7 @@ module Pinecone
       results = @db.execute(
           "select repls.path, repls.originalPath
           from bags as repls left outer join bags as originals on (repls.originalPath = originals.path)
-          where repls.isReplica = 'true' and originals.path is null")
+          where repls.isReplica = 1 and originals.path is null")
       
       @logger.debug("Cleaning up #{results.length} replicas for originals that no longer exist")
       

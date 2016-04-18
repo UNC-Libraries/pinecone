@@ -18,7 +18,6 @@ class TestPreservationBag < Test::Unit::TestCase
     Pinecone::setup_database
     
     @db = Pinecone::Environment.get_db
-    puts @tmp_test_dir
   end
   
   def teardown
@@ -37,7 +36,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_true(bag.consistent?)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("true", row[1])
+    assert_equal(1, row[1])
     assert_not_nil(row[0])
   end
   
@@ -47,7 +46,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_false(bag.consistent?)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("false", row[1])
+    assert_equal(0, row[1])
     assert_not_nil(row[0])
     
     assert_equal(1, bag.get_all_errors.length)
@@ -59,7 +58,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_false(bag.valid?)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("false", row[1])
+    assert_equal(0, row[1])
     assert_not_nil(row[0])
     
     # One is the missing file, one is the extra, and the third is "is invalid"
@@ -72,7 +71,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_false(bag.validate_if_complete)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("false", row[1])
+    assert_equal(0, row[1])
     # Only 2 errors, since consistency check wasn't run
     assert_equal(2, bag.get_all_errors.length)
   end
@@ -101,7 +100,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_true(bag.validate_if_complete)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("true", row[1])
+    assert_equal(1, row[1])
     assert_not_nil(row[0])
   end
   
@@ -126,7 +125,7 @@ class TestPreservationBag < Test::Unit::TestCase
     assert_equal(Array, bag.validate_if_complete.class)
     
     row = @db.get_first_row("select lastValidated, valid from bags")
-    assert_equal("false", row[1])
+    assert_equal(0, row[1])
     assert_not_nil(row[0])
   end
 end
