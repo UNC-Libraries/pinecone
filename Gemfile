@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 gem 'rake'
+gem 'test-unit'
 gem 'sqlite3'
 gem 'bagit'
 gem 'validatable'
