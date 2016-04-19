@@ -41,7 +41,7 @@ module Pinecone
         @@logger = Logger.new(File.join(@@data_dir, log_config["filename"]), log_config["max_logs"], log_config["max_size"])
       end
     
-      @@logger.sev_threshold = ActiveSupport::Inflector.constantize log_config["level"]
+      @@logger.sev_threshold = Object.const_get(log_config["level"])
     end
     
     def Environment.get_admin_email_addresses
