@@ -2,7 +2,6 @@ require 'yaml'
 require 'logger'
 require 'sqlite3'
 require 'pathname'
-require 'active_support/inflector'
 
 module Pinecone
   class Environment
