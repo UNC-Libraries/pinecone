@@ -50,7 +50,7 @@ module Pinecone
     
     def is_replica?
       if @is_replica == nil
-        @is_replica = @db.get_first_row("select isReplica from bags where path = ?", bag_path)[0]
+        @is_replica = @db.get_first_row("select isReplica from bags where path = ?", @bag_path)[0] == 1
       end
       return @is_replica
     end
