@@ -14,7 +14,7 @@ module Pinecone
       @@data_dir = data_dir
       @@config = YAML.load_file File.join(data_dir, "config.yaml")
       
-      self.set_db
+      self.set_db(@@config["database_path"])
       self.set_logger
       self.set_preservation_locations(@@config["preservation_locations"])
       self.set_replica_paths(@@config["replica_paths"])
@@ -24,8 +24,12 @@ module Pinecone
       return @@db
     end
     
-    def Environment.set_db
-      db_file = File.join(@@data_dir, "pinecone.db")
+    def Environment.set_db(db_path=nil)
+      if db_path == nil
+        db_file = File.join(@@data_dir, "pinecone.db")
+      else
+        db_file = db_path
+      end
       @@db = SQLite3::Database.new db_file
     end
     
