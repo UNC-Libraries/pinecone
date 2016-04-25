@@ -19,6 +19,16 @@ task :replicate_new => :init_env do
   pres_actions.replicate_new_bags
 end
 
+task :reset_bag, [:bag_path] => :init_env do |t, args|
+  pres_actions = Pinecone::PreservationActions.new
+  pres_actions.clear_bag_record args.bag_path
+end
+
+task :validate_bag, [:bag_path] => :init_env do |t, args|
+  pres_actions = Pinecone::PreservationActions.new
+  pres_actions.validate_bag args.bag_path
+end
+
 task :process_new => [:init_env, :validate_new, :replicate_new]
 
 task :periodic_validate => :init_env do
