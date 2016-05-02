@@ -85,6 +85,16 @@ module Pinecone
     
     def Environment.set_replica_paths(replica_paths)
       @@replica_paths = replica_paths
+      
+      if @@replica_paths != nil
+        # Resolve preservation locations relative to the data directory
+        @@replica_paths.each do |name|
+          if Pathname.new(name).relative?
+            abs_path = File.join(@@data_dir, name)
+            name = abs_path
+          end
+        end
+      end
     end
     
     def Environment.get_periodic_validation_period

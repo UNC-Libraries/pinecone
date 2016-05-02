@@ -44,7 +44,8 @@ class TestReplication < Test::Unit::TestCase
     @pres_actions = Pinecone::PreservationActions.new
     @pres_actions.mailer = mock()
     
-    @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations)
+    @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations,
+        Pinecone::Environment.get_replica_paths)
   end
     
   

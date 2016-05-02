@@ -22,7 +22,8 @@ module Pinecone
       @mailer.from_address = Pinecone::Environment.get_from_email_address
       @mailer.email_on_error = Pinecone::Environment.get_admin_email_addresses
       
-      @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations)
+      @loc_manager = Pinecone::PreservationLocationManager.new(
+          Pinecone::Environment.get_preservation_locations, Pinecone::Environment.get_replica_paths)
     end
     
     # Validate bags in all configured locations that have not previously been validated or attempted to validate
@@ -110,9 +111,16 @@ module Pinecone
     # based on the name attribute or directory name of the preservation location they came from
     # Returns a PreservationBag object for the replica if successful
     def replicate_bag(bag, replica_base)
+      if bag.bag_path.start_with? replica_base
+        raise Pinecone::ReplicationError.new(replica_path), "Cannot replicate, path #{bag.bag_path} is already a replica"
+      end
+      
       @logger.info("Replicating bag #{bag.bag_path} to #{replica_base}")
       
       pres_loc = @loc_manager.get_location_by_path(bag.bag_path)
+      if pres_loc == nil
+        raise "Replication of bag failed, it is not contained in a registered preservation location: #{bag.bag_path}"
+      end
       
       # Build the path for replicas from this preservation location
       replica_path = pres_loc.get_replica_path replica_base
@@ -148,6 +156,12 @@ module Pinecone
     end
     
     def validate_bag(bag_path)
+      
+      pres_loc = @loc_manager.get_location_by_path(bag_path)
+      if pres_loc == nil
+        raise "Validation of bag failed, it is not contained in a registered preservation location: #{bag_path}"
+      end
+      
       bag = Pinecone::PreservationBag.new(bag_path)
 
       @logger.info "Performing validation of bag: #{bag_path}"
@@ -156,12 +170,7 @@ module Pinecone
         @logger.info "Validation of bag passed: #{bag_path}"
       else
         @logger.warn "Validation of bag failed: #{bag_path}"
-        original_path = bag_path
-        if bag.is_replica?
-          # for replicas, need to get preservation location for the original copy to determine who to email
-          original_path = @db.get_first_row("select originalPath from bags where path = ?", bag.bag_path)[0]
-        end
-        pres_loc = @loc_manager.get_location_by_path(original_path)
+        
         @mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
       end
     end

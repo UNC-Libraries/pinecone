@@ -6,8 +6,10 @@ require_relative 'environment'
 module Pinecone
   class PreservationLocationManager
     attr_reader :pres_locs
+    :replica_paths
     
-    def initialize(loc_configs)
+    def initialize(loc_configs, replica_paths)
+      @replica_paths = replica_paths
       @pres_locs = Hash.new
       
       loc_configs.each do |name, config|
@@ -31,6 +33,14 @@ module Pinecone
         
         if bag_path.start_with? loc_path
           return loc
+        end
+      end
+      
+      @replica_paths.each do |replica_path|
+        @pres_locs.each do |loc_path, loc|
+          if bag_path.start_with? loc.get_replica_path(replica_path)
+            return loc
+          end
         end
       end
       

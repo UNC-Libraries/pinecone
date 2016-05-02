@@ -35,7 +35,8 @@ class TestPeriodicValidation < Test::Unit::TestCase
     @pres_actions = Pinecone::PreservationActions.new
     @pres_actions.mailer = mock()
     
-    @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations)
+    @loc_manager = Pinecone::PreservationLocationManager.new(Pinecone::Environment.get_preservation_locations,
+        Pinecone::Environment.get_replica_paths)
   end
   
   def teardown
@@ -83,8 +84,8 @@ class TestPeriodicValidation < Test::Unit::TestCase
   def test_validation_with_replica
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
     @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
-    FileUtils.cp_r("test-data/simple-loc", @replica_path)
-    replica_bag_path = File.join(@replica_path, "simple-loc/basic_bag")
+    FileUtils.cp_r("test-data/simple-loc", File.join(@replica_path, "simple-tps-loc"))
+    replica_bag_path = File.join(@replica_path, "simple-tps-loc/basic_bag")
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, ?, ?, ?)",
         replica_bag_path, 1, 0, 1, bag_path)
   
@@ -101,8 +102,8 @@ class TestPeriodicValidation < Test::Unit::TestCase
   def test_validation_with_invalid_replica
     bag_path = File.join(@test_data, "simple-loc/basic_bag")
     @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, ?)", bag_path, 1, 0)
-    FileUtils.cp_r("test-data/simple-loc", @replica_path)
-    replica_bag_path = File.join(@replica_path, "simple-loc/basic_bag")
+    FileUtils.cp_r("test-data/simple-loc", File.join(@replica_path, "simple-tps-loc"))
+    replica_bag_path = File.join(@replica_path, "simple-tps-loc/basic_bag")
     FileUtils.rm(File.join(replica_bag_path, "data/test_file"))
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, ?, ?, ?)",
         replica_bag_path, 1, 0, 1, bag_path)
