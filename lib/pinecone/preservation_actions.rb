@@ -21,6 +21,7 @@ module Pinecone
       @mailer = Pinecone::EmailHandler.new
       @mailer.from_address = Pinecone::Environment.get_from_email_address
       @mailer.email_on_error = Pinecone::Environment.get_admin_email_addresses
+      @mailer.subject_prefix = Pinecone::Environment.get_email_subject_prefix
       
       @loc_manager = Pinecone::PreservationLocationManager.new(
           Pinecone::Environment.get_preservation_locations, Pinecone::Environment.get_replica_paths)
@@ -48,13 +49,15 @@ module Pinecone
         @logger.info "Validating new bag: #{bag_path}"
   
         validation_result = bag.validate_if_complete
+        pres_loc = @loc_manager.get_location_by_path(bag_path)
+        
         if validation_result == true
           @logger.info "Validation of new bag passed: #{bag_path}"
+          @mailer.send_new_bag_valid_report(bag, pres_loc.get_contact_emails)
         elsif validation_result == "inprogress"
           @logger.warn "Validation of new bag failed due to being incomplete but adding it to the location may still be in progress: #{bag_path}"
         else
           @logger.warn "Validation of new bag failed: #{bag_path}"
-          pres_loc = @loc_manager.get_location_by_path(bag_path)
           @mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
         end
       end
@@ -139,7 +142,7 @@ module Pinecone
       end
     end
     
-    # Perform validation of bags which are already registered and validated, but have no been validated recently
+    # Perform validation of bags which are already registered and validated, but have not been validated recently
     def periodic_validate
       need_revalidation = Array.new
       # Retrieve list of bags and replicas that have not been validated within the configured validation window
@@ -155,6 +158,7 @@ module Pinecone
       end
     end
     
+    # Validates an individual bag for consistency and completeness, reporting on the results
     def validate_bag(bag_path)
       
       pres_loc = @loc_manager.get_location_by_path(bag_path)
@@ -168,9 +172,11 @@ module Pinecone
 
       if bag.valid?
         @logger.info "Validation of bag passed: #{bag_path}"
+        if !bag.is_replica?
+          @mailer.send_periodic_bag_valid_report(bag, pres_loc.get_contact_emails)
+        end
       else
         @logger.warn "Validation of bag failed: #{bag_path}"
-        
         @mailer.send_invalid_bag_report(bag, pres_loc.get_contact_emails)
       end
     end

@@ -48,6 +48,10 @@ module Pinecone
       return report_validity(@bag.valid_oxum?)
     end
     
+    def get_payload_oxum
+      return @bag.payload_oxum
+    end
+    
     def is_replica?
       if @is_replica == nil
         @is_replica = @db.get_first_row("select isReplica from bags where path = ?", @bag_path)[0] == 1

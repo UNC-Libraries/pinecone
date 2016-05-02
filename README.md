@@ -6,6 +6,7 @@ Performs basic preservation activities upon bagit bags located within a given se
   * Bags are checked for:
     * completeness - no unexpected or missing files
     * consistency - checksums of files in the payload match those recorded in the bag manifest
+  * If a bad was valid, a success report is emailed to content owners.
   * If a bag is invalid, an error report email is sent out to administrators and content owners who are locally configured to receive notifications for that location.
 * Replication of bags
   * After bags have been validated the first time, they are replicated to one or more configured replica locations using rsync.
@@ -13,6 +14,7 @@ Performs basic preservation activities upon bagit bags located within a given se
   * If replication or validation fail, administrators are emailed.
 * Periodic validation of bags - After a configured period of time since the last validation, bags and their replicas will be validated again.
   * If validation fails, administrators and content owners will be notified.
+  * If validation succeeds, content owners are notified.
 
 All actions and their outcomes are recorded to a central log.  
 

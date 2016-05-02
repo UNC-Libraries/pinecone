@@ -56,6 +56,10 @@ module Pinecone
       return @@config["from_email"]
     end
     
+    def Environment.get_email_subject_prefix
+      return @@config["email_subject_prefix"] || ""
+    end
+    
     def Environment.get_preservation_locations
       return @@pres_locs
     end
