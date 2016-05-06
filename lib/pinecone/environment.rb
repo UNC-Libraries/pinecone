@@ -42,9 +42,12 @@ module Pinecone
       if log_config["filename"] == nil
         @@logger = Logger.new STDOUT
       else
-        @@logger = Logger.new(File.join(@@data_dir, log_config["filename"]), log_config["max_logs"], log_config["max_size"])
+        filename = log_config["filename"]
+        if Pathname.new(filename).relative?
+          filename = File.join(@@data_dir, log_config["filename"])
+        end
+        @@logger = Logger.new(filename, log_config["max_logs"], log_config["max_size"])
       end
-    
       @@logger.sev_threshold = Object.const_get(log_config["level"])
     end
     
