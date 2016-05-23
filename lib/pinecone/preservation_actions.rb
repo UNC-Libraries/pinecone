@@ -44,6 +44,11 @@ module Pinecone
       @logger.debug "Preparing to perform first time validation of #{unvalidated_bags.length} bags"
       
       unvalidated_bags.each do |bag_path|
+        if !File.exist? File.join(bag_path, "bagit.txt")
+          @logger.warn "Missing bagit.txt or non-bag directory: #{bag_path}"
+          next
+        end
+        
         bag = Pinecone::PreservationBag.new(bag_path)
   
         @logger.info "Validating new bag: #{bag_path}"
