@@ -111,5 +111,13 @@ module Pinecone
       end
       return time_diff
     end
+    
+    def Environment.get_complete_no_change_timeout
+      time_diff = @@config["complete_no_change_timeout"]
+      if !(time_diff.start_with? "-")
+        time_diff = "-#{time_diff}"
+      end
+      return time_diff
+    end
   end
 end

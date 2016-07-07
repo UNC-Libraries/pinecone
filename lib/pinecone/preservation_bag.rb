@@ -92,16 +92,21 @@ module Pinecone
     # Determines and tracks if the bag appears to be in progress of being created
     def completeness_progress(count)
       # See if the number of missing objects has changed since the last run
-      row = @db.get_first_row("select completeProgress from bags where path = '#{@bag_path}'")
+      row = @db.get_first_row("select completeProgress, datetime(completeLastChange) <= datetime('now', '#{Pinecone::Environment.get_complete_no_change_timeout}') from bags where path = '#{@bag_path}'")
 
-      # No movement, assume that the bag is actually incomplete
       if row[0] != nil && count == row[0]
-        @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = 0 where path = '#{@bag_path}'")
-        return false
+        if row[1] == 0
+          # No change in file count, but haven't timed out yet, so give it more time
+          return true
+        else
+          # No movement, assume that the bag is actually incomplete
+          @db.execute("update bags set lastValidated = CURRENT_TIMESTAMP, valid = 0 where path = '#{@bag_path}'")
+          return false
+        end
       end
       
       # Things are still moving, give it more time
-      @db.execute("update bags set completeProgress = '#{count}' where path = '#{@bag_path}'")
+      @db.execute("update bags set completeProgress = '#{count}', completeLastChange = CURRENT_TIMESTAMP where path = '#{@bag_path}'")
       return true
     end
     

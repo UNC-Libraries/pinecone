@@ -120,7 +120,6 @@ class TestPreservationBag < Test::Unit::TestCase
     
     # Make new bag object to reset validation results
     bag = Pinecone::PreservationBag.new(bag_path)
-    
     # Really invalid after second check
     assert_equal(Array, bag.validate_if_complete.class)
     

@@ -15,6 +15,7 @@ module Pinecone
         lastValidated INTEGER,
         complete BOOLEAN,
         completeProgress NUMERIC,
+        completeLastChange INTEGER,
         replicated BOOLEAN,
         isReplica BOOLEAN,
         originalPath TEXT,

@@ -16,3 +16,4 @@ activity_log:
 replica_paths:
   - ./replicas
 periodic_validation_period: 1 minute
+complete_no_change_timeout: 0 minute

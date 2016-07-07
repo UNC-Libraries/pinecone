@@ -15,3 +15,4 @@ replica_paths:
   - ~
 # Stored in sqlite3 time difference notation
 periodic_validation_period: 5 minutes
+complete_no_change_timeout: 12 hours
