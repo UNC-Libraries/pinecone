@@ -1,10 +1,12 @@
 preservation_locations:
   simple-tps-loc:
-    path: test-data/simple-loc
+    base_path: test-data/simple-loc
+    bag_pattern: "*"
     contacts:
       - test@example.com
   invalid-loc:
-    path: test-data/invalid-loc
+    base_path: test-data/invalid-loc
+    bag_pattern: "*"
 admin_email:
   - test@example.com
 from_email: pinecone@example.com

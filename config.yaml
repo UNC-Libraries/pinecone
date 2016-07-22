@@ -1,6 +1,7 @@
 preservation_locations:
   simple-tps-loc:
-    path: test-data/simple-loc
+    base_path: test-data/simple-loc
+    bag_pattern: "*"
     contacts:
       - test@example.com
 admin_email:

@@ -29,7 +29,8 @@ Primary configuration for the application.  Includes:
 * from_email - Sender address for error report emails
 * preservation_locations - Map of directories containing bags upon which preservation activities will be performed.  Each location is configured with the following:
   * name (key) - Identifier for the location, which must be unique.  It will be used as the name of the base directory containing bags from this location during replication.
-  * path - File path for the location.  If it is relative, it will be evaluated relative to PINECONE_DATA.
+  * `base_path` - File path for the location.  If it is relative, it will be evaluated relative to `PINECONE_DATA`.
+  * `bag_pattern` - Glob pattern for selecting subfolders or patterns of where bags can be found within the `base_path`.
   * contacts - A list of email addresses for people that should be contacted with reports for objects within this location.
 * periodic_validation_period - Amount of time between validation checks per bag after the initial check.  The time is specified using sqlite date modifiers, for example "90 days": https://www.sqlite.org/lang_datefunc.html
 * replica_paths - A list of paths to which replicas will be written.

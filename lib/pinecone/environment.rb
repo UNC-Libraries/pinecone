@@ -73,10 +73,10 @@ module Pinecone
       if @@pres_locs != nil
         # Resolve preservation locations relative to the data directory
         @@pres_locs.each do |name, info|
-          if Pathname.new(info["path"]).relative?
-            abs_path = File.join(@@data_dir, info["path"])
-            @@logger.debug("Resolving relative preservation location #{info["path"]} to #{abs_path}")
-            info["path"] = abs_path
+          if Pathname.new(info["base_path"]).relative?
+            abs_path = File.join(@@data_dir, info["base_path"])
+            @@logger.debug("Resolving relative preservation location #{info["base_path"]} to #{abs_path}")
+            info["base_path"] = abs_path
           end
         end
       end

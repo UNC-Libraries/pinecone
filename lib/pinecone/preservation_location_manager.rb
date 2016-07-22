@@ -14,7 +14,7 @@ module Pinecone
       
       loc_configs.each do |name, config|
         loc = Pinecone::PreservationLocation.new(name, config)
-        @pres_locs[loc.path] = loc
+        @pres_locs[loc.base_path] = loc
       end
     end
     
@@ -29,15 +29,14 @@ module Pinecone
     end
     
     def get_location_by_path(bag_path)
-      @pres_locs.each do |loc_path, loc|
-        
-        if bag_path.start_with? loc_path
+      @pres_locs.each do |loc_base, loc|
+        if File.fnmatch loc.path, bag_path
           return loc
         end
       end
       
       @replica_paths.each do |replica_path|
-        @pres_locs.each do |loc_path, loc|
+        @pres_locs.each do |loc_base, loc|
           if bag_path.start_with? loc.get_replica_path(replica_path)
             return loc
           end

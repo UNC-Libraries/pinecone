@@ -130,11 +130,13 @@ module Pinecone
         raise "Replication of bag failed, it is not contained in a registered preservation location: #{bag.bag_path}"
       end
       
+      # Generate the relative path for this bag versus the base of the preservation location
+      relative_bag = pres_loc.get_relative_path(bag.bag_path).dirname
       # Build the path for replicas from this preservation location
-      replica_path = pres_loc.get_replica_path replica_base
+      replica_path = File.join(pres_loc.get_replica_path(replica_base), relative_bag)
       if !(File.exist? replica_path)
         @logger.debug("Creating new replica location #{replica_path}")
-        FileUtils.mkdir replica_path
+        FileUtils.mkdir_p replica_path
       end
     
       Rsync.run(Shellwords.shellescape(bag.bag_path), Shellwords.shellescape(replica_path), "-r") do |result|

@@ -25,12 +25,12 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     # Verify that it can find the location for a real bag
     loc = manager.get_location_by_path File.join(@@invalid_abs, "incomplete_bag")
     assert_not_nil(loc)
-    assert_equal(@@invalid_abs, loc.path)
+    assert_equal(@@invalid_abs, loc.base_path)
     
     # Verify that a location comes back even if the bag doesn't exist
     loc = manager.get_location_by_path File.join(@@invalid_abs, "non-existent")
     assert_not_nil(loc)
-    assert_equal(@@invalid_abs, loc.path)
+    assert_equal(@@invalid_abs, loc.base_path)
   end
   
   def test_get_location_by_path_invalid_location
