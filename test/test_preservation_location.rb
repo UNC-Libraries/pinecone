@@ -43,4 +43,20 @@ class TestPreservationLocation < Test::Unit::TestCase
     
     assert_equal(3, paths.length)
   end
+  
+  def test_is_available
+    loc = Pinecone::PreservationLocation.new("simple-tps-loc",
+        @loc_config["simple-tps-loc"])
+    
+    assert_true(loc.is_available)
+  end
+  
+  def test_is_unavailable
+    loc_config = @loc_config["simple-tps-loc"]
+    loc_config["base_path"] = loc_config["base_path"] + "_bad"
+    loc = Pinecone::PreservationLocation.new("simple-tps-loc",
+        loc_config)
+    
+    assert_false(loc.is_available)
+  end
 end

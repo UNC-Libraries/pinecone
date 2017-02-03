@@ -10,11 +10,13 @@ module Pinecone
     :valid_bag_template
     :invalid_bag_template
     :repl_failed_template
+    :invalid_config_template
     
     def initialize
       @valid_bag_template = File.read("data/templates/valid_bag.html.mustache")
       @invalid_bag_template = File.read("data/templates/invalid_bag.html.mustache")
       @repl_failed_template = File.read("data/templates/replication_failed.html.mustache")
+      @invalid_config_template = File.read("data/templates/invalid_configuration.html.mustache")
     end
     
     def send_new_bag_valid_report(bag, to_addresses)
@@ -70,6 +72,22 @@ module Pinecone
       mail.to = @email_on_error
       mail.from = @from_address
       mail.body = report.render(@repl_failed_template)
+      
+      mail.deliver!
+    end
+    
+    def send_invalid_configuration_report(error)
+      report = Pinecone::Reports::InvalidConfiguration.new
+      report.error = error
+      
+      to_address = @email_on_error
+      
+      mail = Mail.new
+      mail.content_type = "text/html; charset=UTF-8"
+      mail.subject = "#{add_subject_prefix}Failed due to configuration problems"
+      mail.to = to_address
+      mail.from = @from_address
+      mail.body = report.render(@invalid_config_template)
       
       mail.deliver!
     end

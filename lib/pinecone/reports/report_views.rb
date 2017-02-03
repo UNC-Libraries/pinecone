@@ -13,5 +13,9 @@ module Pinecone
     class ReplicationFailure < Mustache
       attr_accessor :errors, :bag_path, :destination
     end
+    
+    class InvalidConfiguration < Mustache
+      attr_accessor :error
+    end
   end
 end
