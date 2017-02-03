@@ -2,13 +2,26 @@ require "test/unit"
 require_relative '../lib/pinecone/preservation_location_manager'
 
 class TestPreservationLocationManager < Test::Unit::TestCase
-  @@simple_abs = File.absolute_path "test-data/simple-loc"
-  @@invalid_abs = File.absolute_path "test-data/invalid-loc"
+  @@simple_abs
+  @@invalid_abs
   :loc_config
   
   def setup
-    config = YAML.load_file("test-data/config.yaml")
-    @loc_config = config["preservation_locations"]
+    @tmp_test_dir = Dir.mktmpdir
+    FileUtils.cp("test-data/config.yaml", @tmp_test_dir)
+    @test_data = File.join(@tmp_test_dir, "test-data")
+    FileUtils.mkdir(@test_data)
+    
+    @@simple_abs = File.join(@test_data, "simple-loc")
+    @@invalid_abs = File.join(@test_data, "invalid-loc")
+    FileUtils.cp_r("test-data/simple-loc", @@simple_abs)
+    FileUtils.cp_r("test-data/invalid-loc", @@invalid_abs)
+    
+    Pinecone::Environment.setup_env(@tmp_test_dir)
+    
+    #config = YAML.load_file(File.join(@tmp_test_dir, "config.yaml"))
+    #@loc_config = config["preservation_locations"]
+    @loc_config = Pinecone::Environment.get_preservation_locations
   end
   
   def test_find_locations
@@ -63,5 +76,14 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     
     bag_paths = manager.get_bag_paths
     assert_equal(4, bag_paths.length)
+  end
+  
+  def test_unreachable_location
+    simple_loc = File.join(@test_data, "simple-loc")
+    FileUtils.rm_rf simple_loc
+
+    assert_raise ArgumentError do
+      manager = Pinecone::PreservationLocationManager.new(@loc_config, ["./replicas"])
+    end
   end
 end

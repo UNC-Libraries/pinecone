@@ -16,6 +16,10 @@ module Pinecone
       @info = info
     end
     
+    def is_available()
+      return @base_path != nil && File.directory?(@base_path) && File.readable?(@base_path)
+    end
+    
     # Returns the list of email addresses to contact for this location
     def get_contact_emails
       if @info == nil || !(@info.key? "contacts")

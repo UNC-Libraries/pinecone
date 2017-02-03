@@ -23,8 +23,14 @@ module Pinecone
       @mailer.email_on_error = Pinecone::Environment.get_admin_email_addresses
       @mailer.subject_prefix = Pinecone::Environment.get_email_subject_prefix
       
-      @loc_manager = Pinecone::PreservationLocationManager.new(
-          Pinecone::Environment.get_preservation_locations, Pinecone::Environment.get_replica_paths)
+      begin
+        @loc_manager = Pinecone::PreservationLocationManager.new(
+            Pinecone::Environment.get_preservation_locations, Pinecone::Environment.get_replica_paths)
+      rescue ArgumentError => e
+        @mailer.send_invalid_configuration_report(e.message)
+        @logger.error e
+        raise "Failed to initialize preservation locations", e
+      end
     end
     
     # Validate bags in all configured locations that have not previously been validated or attempted to validate

@@ -7,14 +7,20 @@ module Pinecone
   class PreservationLocationManager
     attr_reader :pres_locs
     :replica_paths
+    :logger
     
     def initialize(loc_configs, replica_paths)
+      @logger = Pinecone::Environment.logger
+      
       @replica_paths = replica_paths
       @pres_locs = Hash.new
       
       loc_configs.each do |name, config|
         loc = Pinecone::PreservationLocation.new(name, config)
         @pres_locs[loc.base_path] = loc
+        if !loc.is_available
+          raise ArgumentError, "Preservation location #{loc.loc_key} at #{loc.base_path} is unavailable"
+        end
       end
     end
     

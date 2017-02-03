@@ -21,6 +21,9 @@ class TestCleanupOrphanedReplicas < Test::Unit::TestCase
     
     Pinecone::Environment.setup_env(@tmp_test_dir)
     
+    FileUtils.mkdir File.join(@test_data, "simple-loc")
+    FileUtils.mkdir File.join(@test_data, "invalid-loc")
+    
     @replica_path = File.join(@tmp_test_dir, "replicas")
     FileUtils.mkdir @replica_path
     FileUtils.cp_r("test-data/simple-loc", @replica_path)
