@@ -159,7 +159,7 @@ module Pinecone
     def periodic_validate
       need_revalidation = Array.new
       # Retrieve list of bags and replicas that have not been validated within the configured validation window
-      @db.execute( "select path from bags where valid = 1 and datetime(lastValidated) <= datetime('now', ?)",
+      @db.execute( "select path from bags where valid = 1 and isReplica = 0 and datetime(lastValidated) <= datetime('now', ?)",
           Pinecone::Environment.get_periodic_validation_period) do |row|
         need_revalidation.push row[0]
       end
