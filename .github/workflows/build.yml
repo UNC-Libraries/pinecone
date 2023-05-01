@@ -29,5 +29,10 @@ jobs:
         gem update --system 3.3.25
         gem install bundler:2.2.34
 
+    - name: Install sqlite3 package
+      run: |
+        sudo apt-get update
+        sudo apt-get install sqlite3
+
     - name: Run tests
       run: rake test
