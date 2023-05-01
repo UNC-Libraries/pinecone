@@ -3,7 +3,7 @@ gem 'rake'
 gem 'sqlite3'
 gem 'bagit'
 gem 'validatable'
-gem 'mail'
+gem 'mail', '~>2.7.1'
 gem 'mustache'
 gem 'rsync'
 
