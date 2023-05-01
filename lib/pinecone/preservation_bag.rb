@@ -19,7 +19,7 @@ module Pinecone
       
       # Create database entry for this bag if it does not already exist
       @db.execute("insert or ignore into bags (path, isReplica, capturedTime) values (?, ?, CURRENT_TIMESTAMP) ",
-          @bag_path, "#{(@is_replica == true)? 1 : 0}")
+          [@bag_path, "#{(@is_replica == true)? 1 : 0}"])
     end
     
     def bag_name

@@ -48,7 +48,7 @@ class TestCleanupOrphanedReplicas < Test::Unit::TestCase
     assert_false(File.exist? bag_path)
     
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, CURRENT_TIMESTAMP, ?, ?)",
-        replica_bag_path, 1, 1, bag_path)
+        [replica_bag_path, 1, 1, bag_path])
     
     @pres_actions.cleanup_orphaned_replicas
     
@@ -66,9 +66,9 @@ class TestCleanupOrphanedReplicas < Test::Unit::TestCase
     assert_true(File.exist? bag_path)
     
     @db.execute("insert into bags (path, valid, lastValidated) values (?, ?, CURRENT_TIMESTAMP)",
-        bag_path, 1)
+        [bag_path, 1])
     @db.execute("insert into bags (path, valid, lastValidated, isReplica, originalPath) values (?, ?, CURRENT_TIMESTAMP, ?, ?)",
-        replica_bag_path, 1, 1, bag_path)
+        [replica_bag_path, 1, 1, bag_path])
     
     @pres_actions.cleanup_orphaned_replicas
     

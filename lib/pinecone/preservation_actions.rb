@@ -104,7 +104,7 @@ module Pinecone
             next
           end
           
-          @db.execute("update bags set originalPath = ? where path = ?", bag.bag_path, replica_bag.bag_path)
+          @db.execute("update bags set originalPath = ? where path = ?", [bag.bag_path, replica_bag.bag_path])
           
           # Quick verification that the replication was successful by checking the filesizes and number of files
           if replica_bag.valid_oxum?
@@ -158,7 +158,7 @@ module Pinecone
     # Perform validation of bags which are already registered and validated, but have not been validated recently
     def periodic_validate
       need_revalidation = Array.new
-      # Retrieve list of bags and replicas that have not been validated within the configured validation window
+      # Retrieve list of bags that have not been validated within the configured validation window
       @db.execute( "select path from bags where valid = 1 and isReplica = 0 and datetime(lastValidated) <= datetime('now', ?)",
           Pinecone::Environment.get_periodic_validation_period) do |row|
         need_revalidation.push row[0]
