@@ -1,3 +1,5 @@
 *.lock
 *.db
 .DS_STORE
+.bundle
+vendor

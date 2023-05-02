@@ -39,3 +39,11 @@ Primary configuration for the application.  Includes:
 pinecone.db
 -----------
 Sqlite3 database which records registration and validation information about bags being monitored by pinecone.
+
+Running Tests
+=============
+Pinecone uses test-unit for its tests.
+```
+bundle install
+bundle exec rake test
+```
