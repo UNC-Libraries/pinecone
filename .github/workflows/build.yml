@@ -13,10 +13,10 @@ jobs:
 
     strategy:
       matrix:
-        ruby-version: ['2.7.4']
+        ruby-version: ['3.0.4']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
