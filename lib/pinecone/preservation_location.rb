@@ -18,7 +18,28 @@ module Pinecone
     end
 
     def is_available()
-      return @base_path != nil && File.directory?(@base_path) && File.readable?(@base_path)
+      if @base_path == nil || !File.directory?(@base_path) || !File.readable?(@base_path)
+        return false
+      end
+
+      if !Dir.children(@base_path).empty?
+        return true
+      end
+
+      db = Pinecone::Environment.get_db
+      if db == nil
+        return false
+      end
+
+      begin
+        row = db.get_first_row(
+          "select 1 from bags where path like ? and (isReplica is null or isReplica = 0) limit 1",
+          [File.join(@base_path, "%")]
+        )
+        return row == nil
+      rescue SQLite3::SQLException
+        return false
+      end
     end
 
     def assert_available()

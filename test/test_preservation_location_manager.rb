@@ -1,6 +1,8 @@
 require "test/unit"
 require 'fileutils'
 require 'tmpdir'
+require_relative '../lib/pinecone/setup'
+require_relative '../lib/pinecone/environment'
 require_relative '../lib/pinecone/preservation_location_manager'
 
 class TestPreservationLocationManager < Test::Unit::TestCase
@@ -20,6 +22,7 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     FileUtils.cp_r("test-data/invalid-loc", @@invalid_abs)
     
     Pinecone::Environment.setup_env(@tmp_test_dir)
+    Pinecone::setup_database
     
     #config = YAML.load_file(File.join(@tmp_test_dir, "config.yaml"))
     #@loc_config = config["preservation_locations"]
@@ -108,6 +111,21 @@ class TestPreservationLocationManager < Test::Unit::TestCase
 
     assert_raise ArgumentError do
       manager = Pinecone::PreservationLocationManager.new(@loc_config, ["./replicas"])
+    end
+  end
+
+  def test_empty_location_with_db_contents_unavailable
+    empty_loc = File.join(@test_data, "empty-loc")
+    FileUtils.mkdir(empty_loc)
+    @db = Pinecone::Environment.get_db
+    @db.execute("insert into bags (path, valid, lastValidated, isReplica) values (?, 1, CURRENT_TIMESTAMP, 0)",
+        [File.join(empty_loc, "missing_bag")])
+
+    loc_config = @loc_config.transform_values(&:dup)
+    loc_config["simple-tps-loc"]["base_path"] = empty_loc
+
+    assert_raise ArgumentError do
+      manager = Pinecone::PreservationLocationManager.new(loc_config, ["./replicas"])
     end
   end
 end
