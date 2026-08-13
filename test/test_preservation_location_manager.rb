@@ -1,4 +1,6 @@
 require "test/unit"
+require 'fileutils'
+require 'tmpdir'
 require_relative '../lib/pinecone/preservation_location_manager'
 
 class TestPreservationLocationManager < Test::Unit::TestCase
@@ -45,6 +47,17 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     assert_not_nil(loc)
     assert_equal(@@invalid_abs, loc.base_path)
   end
+
+  def test_get_location_by_path_unavailable_location
+    manager = Pinecone::PreservationLocationManager.new @loc_config, []
+    FileUtils.rm_rf @@invalid_abs
+
+    error = assert_raise(Pinecone::PreservationLocationUnavailableError) do
+      manager.get_location_by_path File.join(@@invalid_abs, "incomplete_bag")
+    end
+
+    assert_equal("Preservation location invalid-loc at #{@@invalid_abs} is unavailable", error.message)
+  end
   
   def test_get_location_by_path_invalid_location
     @loc_config.delete("invalid-loc")
@@ -76,6 +89,17 @@ class TestPreservationLocationManager < Test::Unit::TestCase
     
     bag_paths = manager.get_bag_paths
     assert_equal(4, bag_paths.length)
+  end
+
+  def test_get_bag_paths_unavailable_location
+    manager = Pinecone::PreservationLocationManager.new(@loc_config, ["./replicas"])
+    FileUtils.rm_rf @@simple_abs
+
+    error = assert_raise(Pinecone::PreservationLocationUnavailableError) do
+      manager.get_bag_paths
+    end
+
+    assert_equal("Preservation location simple-tps-loc at #{@@simple_abs} is unavailable", error.message)
   end
   
   def test_unreachable_location
